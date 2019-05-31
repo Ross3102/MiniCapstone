@@ -13,7 +13,7 @@ class Application(Frame):
         self.boxSize = (self.canvasWidth - self.bufferSize * 2) / self.numBoxes
 
 
-        # self.inputTape = Tape()
+        self.inputTape = Tape()
 
         self.inputBox = Text(self, height=1, width=50)
         self.inputBox.grid(row=0, column=0)
@@ -49,12 +49,12 @@ class Application(Frame):
 
     def display_tape(self, text, offset=0):
         self.reset_tape()
-        for i in range(min(self.numBoxes, len(text))):
-            self.canvas.create_text(self.bufferSize + self.boxSize * (i+.5) + offset, 22+self.boxSize/2, text=text[i])
+        for i in range(-1, min(self.numBoxes, len(text))+1):
+            self.canvas.create_text(self.bufferSize + self.boxSize * (i+.5) + offset, 22+self.boxSize/2, text=text[i+1])
 
     def load(self):
-        # self.inputTape.set_input(self.inputBox.get("1.0", END))
-        # self.display_tape(self.inputTape.display_tape())
+        self.inputTape.set_input(self.inputBox.get("1.0", END))
+        self.display_tape(self.inputTape.display_tape(self.numBoxes//2+1))
         self.display_tape([i for i in self.inputBox.get("1.0", END)])
 
     def move_tape(self, direction):
