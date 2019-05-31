@@ -4,7 +4,7 @@ class Application(Frame):
     def __init__(self, master):
         super(Application, self).__init__(master)
 
-        self.inputBox = Text(self, height=1, width=50, borderwidth=10)
+        self.inputBox = Text(self, height=1, width=50)
         self.inputBox.grid(row=0, column=0)
 
         self.playButton = Button(self, text="PLAY", command=self.play)
