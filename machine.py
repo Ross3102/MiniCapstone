@@ -7,12 +7,12 @@ class Machine:
 
 class Tape:
     def __init__(self):
-        self.right_stack = []
-        self.left_stack = []
+        self.right_stack = [None]
+        self.left_stack = [None]
 
     def set_input(self, input):
         self.right_stack = [i for i in input[::-1]]
-        self.left_stack = []
+        self.left_stack = [None]
 
     def move_right(self):
         self.left_stack.append(self.right_stack.pop())
@@ -25,11 +25,16 @@ class Tape:
             self.left_stack.append(None)
 
     def display_tape(self, num_elem):
-        while(len(self.right_stack) < num_elem):
-            self.right_stack.insert(0, None)
-        while(len(self.left_stack) < num_elem - 1):
-            self.left_stack.insert(0, None)
-        return self.left_stack[num_elem-2:0:-1].extend(self.right_stack[0:num_elem-1])
+
+        myList = [None for i in range(num_elem * 2 - 1)]
+
+        for i in range(min(num_elem - 1, len(self.left_stack))):
+            myList[num_elem-2-i] = self.left_stack[len(self.left_stack)-1-i]
+
+        for i in range(min(num_elem, len(self.right_stack))):
+            myList[num_elem-1+i] = self.right_stack[len(self.right_stack)-1-i]
+
+        return myList
 
     def change_input(self, to_push, to_pop):
         if self.right_stack[-1] == to_pop:

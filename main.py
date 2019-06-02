@@ -21,10 +21,10 @@ class Application(Frame):
         self.loadButton = Button(self, text="LOAD INPUT", command=self.load)
         self.loadButton.grid(row=0, column=1)
 
-        self.playButton = Button(self, text="PLAY", command=self.play)
+        self.playButton = Button(self, text="PLAY", command=self.left)
         self.playButton.grid(row=0, column=2)
 
-        self.pauseButton = Button(self, text="PAUSE", command=self.pause)
+        self.pauseButton = Button(self, text="PAUSE", command=self.right)
         self.pauseButton.grid(row=0, column=3)
 
         self.stepButton = Button(self, text="STEP", command=self.step)
@@ -32,8 +32,6 @@ class Application(Frame):
 
         self.canvas = Canvas(self, width=400, height=100)
         self.canvas.grid(row=1, column=0, columnspan=4)
-
-        self.canvas.create_polygon(190, 5, 210, 5, 200, 20)
 
         self.reset_tape()
 
@@ -44,24 +42,41 @@ class Application(Frame):
 
     def reset_tape(self, offset=0):
         self.canvas.delete("all")
-        for i in range(-1, self.numBoxes+1):
+        self.canvas.create_polygon(190, 5, 210, 5, 200, 20)
+        for i in range(-2, self.numBoxes+2):
             self.canvas.create_rectangle(self.bufferSize + self.boxSize * i + offset, 22, self.bufferSize + self.boxSize * (i + 1) + offset, 22 + self.boxSize)
 
     def display_tape(self, text, offset=0):
-        self.reset_tape()
-        for i in range(-1, min(self.numBoxes, len(text))+1):
-            self.canvas.create_text(self.bufferSize + self.boxSize * (i+.5) + offset, 22+self.boxSize/2, text=text[i+1])
+        self.reset_tape(offset)
+        for i in range(-2, min(self.numBoxes, len(text))+2):
+            self.canvas.create_text(self.bufferSize + self.boxSize * (i+.5) + offset, 22+self.boxSize/2, text=text[i+2])
+        self.canvas.update()
 
     def load(self):
-        self.inputTape.set_input(self.inputBox.get("1.0", END))
-        self.display_tape(self.inputTape.display_tape(self.numBoxes//2+1))
-        self.display_tape([i for i in self.inputBox.get("1.0", END)])
+        self.inputTape.set_input(self.inputBox.get("1.0", END)[:-1])
+        self.display_tape(self.inputTape.display_tape(self.numBoxes//2+3))
+
+    def left(self):
+        self.move_tape(LEFT)
+        self.inputTape.move_left()
+        self.display_tape(self.inputTape.display_tape(self.numBoxes//2+3))
+
+    def right(self):
+        self.move_tape(RIGHT)
+        self.inputTape.move_right()
+        self.display_tape(self.inputTape.display_tape(self.numBoxes // 2 + 3))
 
     def move_tape(self, direction):
-        pass
-        # offset = 0
-        # if direction == LEFT:
-        #     while offset <
+        text = self.inputTape.display_tape(self.numBoxes // 2 + 3)
+        offset = 0
+        if direction == LEFT:
+            while offset < self.boxSize:
+                offset += 1
+                self.display_tape(text, offset)
+        else:
+            while offset > -self.boxSize:
+                offset -= 1
+                self.display_tape(text, offset)
 
     def play(self):
         pass
