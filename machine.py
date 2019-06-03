@@ -2,8 +2,19 @@ LEFT = False
 RIGHT = True
 
 class Machine:
-    def __init__(self, states):
-        self.states = states
+    def __init__(self):
+        self.states = []
+
+    def addTransition(self, transition):
+        if not transition.end in [s.name for s in self.states]:
+            self.states.append(State(transition.end, []))
+
+        for s in self.states:
+            if transition.start == s.name:
+                s.addTransition(transition)
+                return
+
+        self.states.append(State(transition.start, [transition]))
 
 class Tape:
     def __init__(self):
@@ -46,6 +57,9 @@ class State:
         self.name = name
         self.transitions = transitions
 
+    def addTransition(self, transition):
+        self.transitions.append(transition)
+
     def transition(self, input, tape):
         for i in self.transitions:
             if i.start() == self.name and i.read() == input:
@@ -56,7 +70,7 @@ class State:
                     tape.move_right()
 
 class Transition:
-    def __init__(self, start, end, read, write, direction):
+    def __init__(self, start, read, write, direction, end):
         self.start = start
         self.end = end
         self.read = read
