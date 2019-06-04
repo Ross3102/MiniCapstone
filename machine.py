@@ -21,6 +21,9 @@ class Tape:
         self.right_stack = [None]
         self.left_stack = [None]
 
+    def get_current_input(self):
+        return self.right_stack[-1]
+
     def set_input(self, input):
         self.right_stack = [i for i in input[::-1]]
         self.left_stack = [None]

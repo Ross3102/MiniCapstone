@@ -36,20 +36,45 @@ class Application(Frame):
 
         self.reset_tape()
 
-        self.transitionBox = Text(self, width=50)
-        self.transitionBox.grid(row=2, column=0)
+        Label(self, text="Start State", anchor='w').grid(row=2, column=0)
+
+        self.start_state_box = Text(self, height=1, width=30)
+        self.start_state_box.grid(row=3, column=0)
+
+        Label(self, text="Transitions", anchor='w').grid(row=4, column=0)
+
+        self.transitionBox = Text(self, height=10, width=30)
+        self.transitionBox.grid(row=5, column=0)
+
+        Label(self, text="End States", anchor='w').grid(row=6, column=0)
+
+        self.end_state_box = Text(self, height=3, width=30)
+        self.end_state_box.grid(row=7, column=0)
+
+        self.start_state = ""
+        self.final_states = []
 
         self.loadMachineButton = Button(self, text="LOAD MACHINE", command=self.loadMachine)
-        self.loadMachineButton.grid(row=2, column=1)
+        self.loadMachineButton.grid(row=5, column=1)
 
         self.grid()
 
     def loadMachine(self):
         transitions = [t.split() for t in self.transitionBox.get("1.0", END).split("\n") if len(t) !=  0]
+        self.start_state = self.start_state_box.get("1.0", END).strip()
+        self.final_states = self.end_state_box.get("1.0", END).strip().split(" ")
         for i in range(len(transitions)):
             start, read, write, direction, end = transitions[i]
             self.machine.addTransition(Transition(start, read, write, direction, end))
-        print([s.name for s in self.machine.states])
+        self.start_machine()
+
+    def start_machine(self):
+        current_state = self.start_state
+        while current_state not in self.final_states:
+            current_state = self.step(current_state)
+
+    def step(self, state):
+        pass
 
     def reset_tape(self, offset=0):
         self.canvas.delete("all")
