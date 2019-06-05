@@ -69,14 +69,15 @@ class State:
     def addTransition(self, transition):
         self.transitions.append(transition)
 
-    def transition(self, input, tape):
+    def transition(self, tape):
         for i in self.transitions:
-            if i.start() == self.name and i.read() == input:
+            if i.start() == self.name and i.read() == tape.get_current_input():
                 tape.change_input(i.write(), i.read())
                 if i.direction() == LEFT:
                     tape.move_left()
-                else:
+                elif i.direction() == RIGHT:
                     tape.move_right()
+                return [i.direction(), i.end()]
 
 class Transition:
     def __init__(self, start, read, write, direction, end):

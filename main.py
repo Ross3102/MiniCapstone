@@ -66,12 +66,18 @@ class Application(Frame):
         self.start_machine()
 
     def start_machine(self):
-        current_state = self.machine.start_state
-        while current_state not in self.machine.final_states:
-            current_state = self.step(current_state)
+        self.current_state = self.machine.start_state
+        while self.current_state not in self.machine.final_states:
+            self.current_state = self.step()
 
-    def step(self, state):
-        pass
+    def step(self):
+        state_info = self.current_state.transition(self.inputTape)
+        direction = state_info[0]
+        self.current_state = state_info[1]
+        if direction == LEFT:
+            self.left()
+        elif direction == RIGHT:
+            self.right()
 
     def reset_tape(self, offset=0):
         self.canvas.delete("all")
