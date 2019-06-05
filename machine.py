@@ -4,11 +4,13 @@ RIGHT = True
 class Machine:
     def __init__(self):
         self.states = []
-        self.start_state = ""
+        self.start_state = None
         self.final_states = []
 
     def set_start_end(self, start, end):
+        self.states = [i for i in end]
         self.start_state = start
+        self.states.append(self.start_state)
         self.final_states = end
 
     def addTransition(self, transition):
@@ -71,13 +73,13 @@ class State:
 
     def transition(self, tape):
         for i in self.transitions:
-            if i.start() == self.name and i.read() == tape.get_current_input():
-                tape.change_input(i.write(), i.read())
-                if i.direction() == LEFT:
+            if i.get_start() == self.name and i.get_read() == tape.get_current_input():
+                tape.change_input(i.get_write(), i.get_read())
+                if i.get_direction() == LEFT:
                     tape.move_left()
-                elif i.direction() == RIGHT:
+                elif i.get_direction() == RIGHT:
                     tape.move_right()
-                return [i.direction(), i.end()]
+                return [i.get_direction(), i.get_end()]
 
 class Transition:
     def __init__(self, start, read, write, direction, end):
@@ -87,17 +89,17 @@ class Transition:
         self.write = write
         self.direction = direction
 
-    def start(self):
+    def get_start(self):
         return self.start
 
-    def end(self):
+    def get_end(self):
         return self.end
 
-    def read(self):
+    def get_read(self):
         return self.read
 
-    def write(self):
+    def get_write(self):
         return self.write
 
-    def direction(self):
+    def get_direction(self):
         return self.direction

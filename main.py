@@ -5,6 +5,8 @@ class Application(Frame):
     def __init__(self, master):
         super(Application, self).__init__(master)
 
+        self.master = master
+
         self.numBoxes = 9
         self.canvasWidth = 400
         self.canvasHeight = 100
@@ -12,9 +14,12 @@ class Application(Frame):
         self.bufferSize = 5
         self.boxSize = (self.canvasWidth - self.bufferSize * 2) / self.numBoxes
 
+        self.going = False
 
         self.inputTape = Tape()
         self.machine = Machine()
+
+        self.current_state = None
 
         self.inputBox = Text(self, height=1, width=50)
         self.inputBox.grid(row=0, column=0)
@@ -22,13 +27,13 @@ class Application(Frame):
         self.loadButton = Button(self, text="LOAD INPUT", command=self.load)
         self.loadButton.grid(row=0, column=1)
 
-        self.playButton = Button(self, text="PLAY", command=self.left)
+        self.playButton = Button(self, text="PLAY", command=self.play)
         self.playButton.grid(row=0, column=2)
 
-        self.pauseButton = Button(self, text="PAUSE", command=self.right)
+        self.pauseButton = Button(self, text="PAUSE", command=self.pause)
         self.pauseButton.grid(row=0, column=3)
 
-        self.stepButton = Button(self, text="STEP", command=self.step)
+        self.stepButton = Button(self, text="STEP", command=self.step_button_pressed)
         self.stepButton.grid(row=0, column=4)
 
         self.canvas = Canvas(self, width=400, height=100)
@@ -56,19 +61,25 @@ class Application(Frame):
 
         self.grid()
 
+        self.loop()
+
     def loadMachine(self):
         transitions = [t.split() for t in self.transitionBox.get("1.0", END).split("\n") if len(t) !=  0]
-        self.machine.start_state = self.start_state_box.get("1.0", END).strip()
-        self.machine.final_states = self.end_state_box.get("1.0", END).strip().split(" ")
+
+        start_state = State(self.start_state_box.get("1.0", END).strip(), [])
+        end_states = [State(f, []) for f in self.end_state_box.get("1.0", END).strip().split(" ")]
+
+        self.machine.set_start_end(start_state, end_states)
         for i in range(len(transitions)):
             start, read, write, direction, end = transitions[i]
             self.machine.addTransition(Transition(start, read, write, direction, end))
-        self.start_machine()
-
-    def start_machine(self):
         self.current_state = self.machine.start_state
-        while self.current_state not in self.machine.final_states:
-            self.current_state = self.step()
+
+    def loop(self):
+        if self.going and self.current_state not in self.machine.final_states:
+            self.step()
+
+        self.master.after(1, self.loop)
 
     def step(self):
         state_info = self.current_state.transition(self.inputTape)
@@ -96,11 +107,13 @@ class Application(Frame):
         self.display_tape(self.inputTape.display_tape(self.numBoxes//2+3))
 
     def left(self):
+        self.display_tape(self.inputTape.display_tape(self.numBoxes // 2 + 3))
         self.move_tape(LEFT)
         self.inputTape.move_left()
         self.display_tape(self.inputTape.display_tape(self.numBoxes//2+3))
 
     def right(self):
+        self.display_tape(self.inputTape.display_tape(self.numBoxes // 2 + 3))
         self.move_tape(RIGHT)
         self.inputTape.move_right()
         self.display_tape(self.inputTape.display_tape(self.numBoxes // 2 + 3))
@@ -118,13 +131,14 @@ class Application(Frame):
                 self.display_tape(text, offset)
 
     def play(self):
-        pass
+        self.going = True
 
     def pause(self):
-        pass
+        self.going = False
 
-    def step(self):
+    def step_button_pressed(self):
         self.pause()
+        self.step()
 
 root = Tk()
 app = Application(root)
