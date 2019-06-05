@@ -4,6 +4,12 @@ RIGHT = True
 class Machine:
     def __init__(self):
         self.states = []
+        self.start_state = ""
+        self.final_states = []
+
+    def set_start_end(self, start, end):
+        self.start_state = start
+        self.final_states = end
 
     def addTransition(self, transition):
         if not transition.end in [s.name for s in self.states]:
