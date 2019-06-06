@@ -1,9 +1,53 @@
 from tkinter import *
 from machine import *
 
-class Application(Frame):
+
+class Builder(Toplevel):
+    def __init__(self, runner):
+        super(Builder, self).__init__(runner.master)
+
+        self.runner = runner
+
+        self.canvas = Canvas(self, width=1000, height=600)
+        self.canvas.grid(row=0, column=0)
+        Button(self, text="FINISH BUILDING", command=self.finish).grid(row=1, column=0)
+
+        self.states = []
+
+        self.mouse = False
+        self.draggingState = False
+
+        self.bind('<ButtonPress-1>', self.mouse_clicked)
+        self.bind('<ButtonRelease-1>', self.mouse_released)
+        self.bind("<B1-Motion>", self.mouse_moved)
+
+        self.draw_side_menu()
+
+    def in_circle(self, x, y, cx, cy, r):
+        pass
+
+    def mouse_clicked(self, event):
+        self.mouse = True
+        if self.in_circle(event.x, event.y, 45, 45, 70):
+            self.draggingState = True
+
+    def mouse_released(self, event):
+        self.mouse = False
+
+    def mouse_moved(self):
+        pass
+
+    def draw_side_menu(self):
+        self.canvas.create_oval(10, 10, 80, 80)
+        self.canvas.create_text(45, 45, text="New State")
+
+    def finish(self):
+        pass
+
+
+class Runner(Frame):
     def __init__(self, master):
-        super(Application, self).__init__(master)
+        super(Runner, self).__init__(master)
 
         self.master = master
 
@@ -25,22 +69,17 @@ class Application(Frame):
         self.inputBox = Text(self, height=1, width=50)
         self.inputBox.grid(row=0, column=0)
 
-        self.loadButton = Button(self, text="LOAD INPUT", command=self.load)
-        self.loadButton.grid(row=0, column=1)
+        Button(self, text="LOAD INPUT", command=self.load).grid(row=0, column=1)
 
         self.playButton = Button(self, text="PLAY", command=self.play)
         self.playButton.grid(row=0, column=2)
 
-        self.pauseButton = Button(self, text="PAUSE", command=self.pause)
-        self.pauseButton.grid(row=0, column=3)
+        Button(self, text="PAUSE", command=self.pause).grid(row=0, column=3)
 
-        self.stepButton = Button(self, text="STEP", command=self.step_button_pressed)
-        self.stepButton.grid(row=0, column=4)
+        Button(self, text="STEP", command=self.step_button_pressed).grid(row=0, column=4)
 
         self.canvas = Canvas(self, width=400, height=100)
         self.canvas.grid(row=1, column=0, columnspan=4)
-
-        self.reset_tape()
 
         Label(self, text="Start State").grid(row=2, column=0)
 
@@ -57,12 +96,18 @@ class Application(Frame):
         self.end_state_box = Text(self, height=3, width=30)
         self.end_state_box.grid(row=7, column=0)
 
-        self.loadMachineButton = Button(self, text="LOAD MACHINE", command=self.loadMachine)
+        self.loadMachineButton = Button(self, text="LOAD MACHINE", command=self.load_machine)
         self.loadMachineButton.grid(row=8, column=0)
 
+        Button(self, text="LAUNCH MACHINE BUILDER", command=self.launch_builder).grid(row=9, column=0)
+
+        self.erase_tape()
         self.grid()
 
         self.loop()
+
+    def launch_builder(self):
+        self.builder = Builder(self)
 
     def reset(self):
         self.playButton.config(text="PLAY")
@@ -70,7 +115,7 @@ class Application(Frame):
         self.going = False
         self.correct = None
 
-    def loadMachine(self):
+    def load_machine(self):
         transitions = [t.split() for t in self.transitionBox.get("1.0", END).split("\n") if len(t) !=  0]
 
         start_state = self.start_state_box.get("1.0", END).strip()
@@ -110,14 +155,14 @@ class Application(Frame):
             self.right()
         return True
 
-    def reset_tape(self, offset=0):
+    def erase_tape(self, offset=0):
         self.canvas.delete("all")
         self.canvas.create_polygon(190, 5, 210, 5, 200, 20)
         for i in range(-2, self.numBoxes+2):
             self.canvas.create_rectangle(self.bufferSize + self.boxSize * i + offset, 22, self.bufferSize + self.boxSize * (i + 1) + offset, 22 + self.boxSize)
 
     def display_tape(self, text, offset=0):
-        self.reset_tape(offset)
+        self.erase_tape(offset)
         for i in range(-2, min(self.numBoxes, len(text))+2):
             self.canvas.create_text(self.bufferSize + self.boxSize * (i+.5) + offset, 22+self.boxSize/2, text=text[i+2])
         self.canvas.update()
@@ -168,5 +213,6 @@ class Application(Frame):
             return
 
 root = Tk()
-app = Application(root)
+root.title("Turing Machine Runner")
+app = Runner(root)
 root.mainloop()
