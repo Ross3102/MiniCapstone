@@ -78,28 +78,31 @@ class Runner(Frame):
 
         Button(self, text="STEP", command=self.step_button_pressed).grid(row=0, column=4)
 
-        self.canvas = Canvas(self, width=400, height=100)
-        self.canvas.grid(row=1, column=0, columnspan=4)
+        self.current_state_text = Label(self, text="Current State", height=2)
+        self.current_state_text.grid(row=1, column=0)
 
-        Label(self, text="Start State").grid(row=2, column=0)
+        self.canvas = Canvas(self, width=400, height=100)
+        self.canvas.grid(row=2, column=0, columnspan=4)
+
+        Label(self, text="Start State").grid(row=3, column=0)
 
         self.start_state_box = Text(self, height=1, width=30)
-        self.start_state_box.grid(row=3, column=0)
+        self.start_state_box.grid(row=4, column=0)
 
-        Label(self, text="Transitions").grid(row=4, column=0)
+        Label(self, text="Transitions").grid(row=5, column=0)
 
         self.transitionBox = Text(self, height=10, width=30)
-        self.transitionBox.grid(row=5, column=0)
+        self.transitionBox.grid(row=6, column=0)
 
-        Label(self, text="End States").grid(row=6, column=0)
+        Label(self, text="End States").grid(row=7, column=0)
 
         self.end_state_box = Text(self, height=3, width=30)
-        self.end_state_box.grid(row=7, column=0)
+        self.end_state_box.grid(row=8, column=0)
 
         self.loadMachineButton = Button(self, text="LOAD MACHINE", command=self.load_machine)
-        self.loadMachineButton.grid(row=8, column=0)
+        self.loadMachineButton.grid(row=6, column=1)
 
-        Button(self, text="LAUNCH MACHINE BUILDER", command=self.launch_builder).grid(row=9, column=0)
+        Button(self, text="LAUNCH MACHINE BUILDER", command=self.launch_builder).grid(row=7, column=1)
 
         self.erase_tape()
         self.grid()
@@ -119,6 +122,7 @@ class Runner(Frame):
         transitions = [t.split() for t in self.transitionBox.get("1.0", END).split("\n") if len(t) !=  0]
 
         start_state = self.start_state_box.get("1.0", END).strip()
+        self.update_current_state(start_state)
         end_states = self.end_state_box.get("1.0", END).strip().split(" ")
 
         self.machine.set_start_end(start_state, end_states)
@@ -128,6 +132,11 @@ class Runner(Frame):
 
         self.load()
         self.reset()
+
+    def update_current_state(self, text):
+        self.current_state_text.destroy()
+        self.current_state_text = Label(self, text="Current State: " + text, height=2)
+        self.current_state_text.grid(row=1, column=0)
 
     def loop(self):
         if self.correct is None:
@@ -149,6 +158,7 @@ class Runner(Frame):
             return False
         direction = state_info[0]
         self.current_state = state_info[1]
+        self.update_current_state(self.current_state.name)
         if direction == "0":
             self.left()
         elif direction == "1":
