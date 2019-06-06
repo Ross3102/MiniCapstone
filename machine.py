@@ -8,11 +8,19 @@ class Machine:
         self.final_state_names = []
 
     def start_state(self):
+        if self.start_state_name is None:
+            return None
         return self.states[self.start_state_name]
 
+    def reset(self):
+        self.states = {}
+        self.start_state_name = None
+        self.final_state_names = []
+
     def set_start_end(self, start, end):
+        self.reset()
         for i in end:
-            self.states[i] = State(end)
+            self.states[i] = State(i)
         self.states[start] = State(start)
 
         self.start_state_name = start
@@ -82,7 +90,6 @@ class State:
 
     def transition(self, tape):
         for i in self.transitions:
-            print(i.get_read(), tape.get_current_input())
             if i.get_read() == tape.get_current_input():
                 tape.change_input(i.get_write(), i.get_read())
                 if i.get_direction() == LEFT:
@@ -90,7 +97,7 @@ class State:
                 elif i.get_direction() == RIGHT:
                     tape.move_right()
                 return [i.get_direction(), i.get_end()]
-            return False
+        return False
 
 class Transition:
     def __init__(self, read, write, direction, end):
@@ -110,3 +117,6 @@ class Transition:
 
     def get_direction(self):
         return self.direction
+
+    def __str__(self):
+        return "%s/%s %s %s" % (self.read, self.write, self.direction, self.end)

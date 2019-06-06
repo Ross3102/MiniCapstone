@@ -15,6 +15,7 @@ class Application(Frame):
         self.boxSize = (self.canvasWidth - self.bufferSize * 2) / self.numBoxes
 
         self.going = False
+        self.correct = None
 
         self.inputTape = Tape()
         self.machine = Machine()
@@ -41,27 +42,33 @@ class Application(Frame):
 
         self.reset_tape()
 
-        Label(self, text="Start State", anchor='w').grid(row=2, column=0)
+        Label(self, text="Start State").grid(row=2, column=0)
 
         self.start_state_box = Text(self, height=1, width=30)
         self.start_state_box.grid(row=3, column=0)
 
-        Label(self, text="Transitions", anchor='w').grid(row=4, column=0)
+        Label(self, text="Transitions").grid(row=4, column=0)
 
         self.transitionBox = Text(self, height=10, width=30)
         self.transitionBox.grid(row=5, column=0)
 
-        Label(self, text="End States", anchor='w').grid(row=6, column=0)
+        Label(self, text="End States").grid(row=6, column=0)
 
         self.end_state_box = Text(self, height=3, width=30)
         self.end_state_box.grid(row=7, column=0)
 
         self.loadMachineButton = Button(self, text="LOAD MACHINE", command=self.loadMachine)
-        self.loadMachineButton.grid(row=5, column=1)
+        self.loadMachineButton.grid(row=8, column=0)
 
         self.grid()
 
         self.loop()
+
+    def reset(self):
+        self.playButton.config(text="PLAY")
+        self.current_state = self.machine.start_state()
+        self.going = False
+        self.correct = None
 
     def loadMachine(self):
         transitions = [t.split() for t in self.transitionBox.get("1.0", END).split("\n") if len(t) !=  0]
@@ -73,18 +80,26 @@ class Application(Frame):
         for i in range(len(transitions)):
             start, read, write, direction, end = transitions[i]
             self.machine.addTransition(start, read, write, direction, end)
-        self.current_state = self.machine.start_state()
+
+        self.load()
+        self.reset()
 
     def loop(self):
-        if self.going and self.current_state.name not in self.machine.final_state_names:
-            self.step()
+        if self.correct is None:
+            if self.going:
+                if not self.step():
+                    self.correct = False
+                    print("NO MATCH")
+                    self.playButton.config(text="RESET")
+            if self.current_state is not None and self.current_state.name in self.machine.final_state_names:
+                self.correct = True
+                print("MATCH")
+                self.playButton.config(text="RESET")
 
         self.master.after(1, self.loop)
 
     def step(self):
-        print([s.transitions for s in self.machine.states.values()])
         state_info = self.current_state.transition(self.inputTape)
-        print(state_info)
         if not state_info:
             return False
         direction = state_info[0]
@@ -93,6 +108,7 @@ class Application(Frame):
             self.left()
         elif direction == "1":
             self.right()
+        return True
 
     def reset_tape(self, offset=0):
         self.canvas.delete("all")
@@ -107,6 +123,7 @@ class Application(Frame):
         self.canvas.update()
 
     def load(self):
+        self.reset()
         self.inputTape.set_input(self.inputBox.get("1.0", END)[:-1])
         self.display_tape(self.inputTape.display_tape(self.numBoxes//2+3))
 
@@ -135,14 +152,20 @@ class Application(Frame):
                 self.display_tape(text, offset)
 
     def play(self):
-        self.going = True
+        if self.correct is not None:
+            self.load()
+        else:
+            self.going = True
 
     def pause(self):
         self.going = False
 
     def step_button_pressed(self):
         self.pause()
-        self.step()
+        if self.correct is None and not self.step():
+            self.correct = False
+            print("NO MATCH")
+            return
 
 root = Tk()
 app = Application(root)
