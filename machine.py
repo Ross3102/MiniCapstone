@@ -3,26 +3,35 @@ RIGHT = True
 
 class Machine:
     def __init__(self):
-        self.states = []
-        self.start_state = None
-        self.final_states = []
+        self.states = {}
+        self.start_state_name = None
+        self.final_state_names = []
+
+    def start_state(self):
+        return self.states[self.start_state_name]
 
     def set_start_end(self, start, end):
-        self.states = [i for i in end]
-        self.start_state = start
-        self.states.append(self.start_state)
-        self.final_states = end
+        for i in end:
+            self.states[i] = State(end)
+        self.states[start] = State(start)
 
-    def addTransition(self, transition):
-        if not transition.end in [s.name for s in self.states]:
-            self.states.append(State(transition.end, []))
+        self.start_state_name = start
+        self.final_state_names = end
 
-        for s in self.states:
-            if transition.start == s.name:
-                s.addTransition(transition)
-                return
+    def addTransition(self, start, read, write, direction, end):
+        end_state = self.states.get(end, None)
+        if end_state is None:
+            self.states[end] = State(end)
+            end_state = self.states[end]
 
-        self.states.append(State(transition.start, [transition]))
+        start_state = self.states.get(start, None)
+        if start_state is None:
+            self.states[start] = State(start)
+            start_state = self.states[start]
+
+        start_state.addTransition(Transition(read, write, direction, end_state))
+
+
 
 class Tape:
     def __init__(self):
@@ -64,33 +73,31 @@ class Tape:
             self.right_stack.append(to_push)
 
 class State:
-    def __init__(self, name, transitions):
+    def __init__(self, name):
         self.name = name
-        self.transitions = transitions
+        self.transitions = []
 
     def addTransition(self, transition):
         self.transitions.append(transition)
 
     def transition(self, tape):
         for i in self.transitions:
-            if i.get_start() == self.name and i.get_read() == tape.get_current_input():
+            print(i.get_read(), tape.get_current_input())
+            if i.get_read() == tape.get_current_input():
                 tape.change_input(i.get_write(), i.get_read())
                 if i.get_direction() == LEFT:
                     tape.move_left()
                 elif i.get_direction() == RIGHT:
                     tape.move_right()
                 return [i.get_direction(), i.get_end()]
+            return False
 
 class Transition:
-    def __init__(self, start, read, write, direction, end):
-        self.start = start
+    def __init__(self, read, write, direction, end):
         self.end = end
         self.read = read
         self.write = write
         self.direction = direction
-
-    def get_start(self):
-        return self.start
 
     def get_end(self):
         return self.end

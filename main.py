@@ -66,28 +66,32 @@ class Application(Frame):
     def loadMachine(self):
         transitions = [t.split() for t in self.transitionBox.get("1.0", END).split("\n") if len(t) !=  0]
 
-        start_state = State(self.start_state_box.get("1.0", END).strip(), [])
-        end_states = [State(f, []) for f in self.end_state_box.get("1.0", END).strip().split(" ")]
+        start_state = self.start_state_box.get("1.0", END).strip()
+        end_states = self.end_state_box.get("1.0", END).strip().split(" ")
 
         self.machine.set_start_end(start_state, end_states)
         for i in range(len(transitions)):
             start, read, write, direction, end = transitions[i]
-            self.machine.addTransition(Transition(start, read, write, direction, end))
-        self.current_state = self.machine.start_state
+            self.machine.addTransition(start, read, write, direction, end)
+        self.current_state = self.machine.start_state()
 
     def loop(self):
-        if self.going and self.current_state not in self.machine.final_states:
+        if self.going and self.current_state.name not in self.machine.final_state_names:
             self.step()
 
         self.master.after(1, self.loop)
 
     def step(self):
+        print([s.transitions for s in self.machine.states.values()])
         state_info = self.current_state.transition(self.inputTape)
+        print(state_info)
+        if not state_info:
+            return False
         direction = state_info[0]
         self.current_state = state_info[1]
-        if direction == LEFT:
+        if direction == "0":
             self.left()
-        elif direction == RIGHT:
+        elif direction == "1":
             self.right()
 
     def reset_tape(self, offset=0):
