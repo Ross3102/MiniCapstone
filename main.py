@@ -1,5 +1,6 @@
 from tkinter import *
 from machine import *
+import math
 
 
 class Builder(Toplevel):
@@ -12,34 +13,84 @@ class Builder(Toplevel):
         self.canvas.grid(row=0, column=0)
         Button(self, text="FINISH BUILDING", command=self.finish).grid(row=1, column=0)
 
+        self.machine = Machine()
         self.states = []
 
         self.mouse = False
-        self.draggingState = False
+        self.mousepos = [0, 0]
+        self.draggingState = None
+
+        self.transitioning = None
 
         self.bind('<ButtonPress-1>', self.mouse_clicked)
         self.bind('<ButtonRelease-1>', self.mouse_released)
-        self.bind("<B1-Motion>", self.mouse_moved)
+        self.bind("<Motion>", self.mouse_moved)
 
         self.draw_side_menu()
 
     def in_circle(self, x, y, cx, cy, r):
-        pass
+        return math.sqrt((cx-x)**2+(cy-y)**2) <= r
+
+    def in_rect(self, x, y, lx, ty, rx, by):
+        return lx <= x <= rx and ty <= y <= by
 
     def mouse_clicked(self, event):
         self.mouse = True
-        if self.in_circle(event.x, event.y, 45, 45, 70):
-            self.draggingState = True
+        if self.in_circle(event.x, event.y, 45, 45, 35):
+            self.draggingState = LocationState("q0", event.x, event.y)
+        elif self.in_rect(event.x, event.y, 10, 100, 120, 140):
+            self.transitioning = True
+        else:
+            for s in range(len(self.states)):
+                circle = self.states[s]
+                if self.in_circle(event.x, event.y, circle.x, circle.y, 35):
+                    if self.transitioning == True:
+                        self.transitioning = circle
+                        self.canvas.create_line(circle.x, circle.y, event.x, event.y)
+                    elif self.transitioning is not None:
+                        self.machine.addTransition(self.transitioning.name, "", "", "1", circle.name)
+                        self.transitioning = None
+                    self.draggingState = self.states[s]
+                    del self.states[s]
+                    return
+            if self.transitioning is not None:
+                self.transitioning = None
 
     def mouse_released(self, event):
         self.mouse = False
+        if self.draggingState is not None:
+            if not self.in_rect(event.x, event.y, 10, 160, 120, 580):
+                self.states.append(self.draggingState)
+        self.draggingState = None
 
-    def mouse_moved(self):
-        pass
+        self.redraw()
+
+    def redraw(self):
+        self.canvas.delete("all")
+        self.draw_side_menu()
+
+        for s in self.states + ([self.draggingState] if self.draggingState is not None else []):
+            self.canvas.create_oval(s.x - 35, s.y - 35, s.x + 35, s.y + 35)
+            self.canvas.create_text(s.x, s.y, text=s.name)
+
+        if self.transitioning not in [True, None]:
+            self.canvas.create_line(self.transitioning.x, self.transitioning.y, self.mousepos[0], self.mousepos[1])
+        self.canvas.update()
+
+    def mouse_moved(self, event):
+        self.mousepos = [event.x, event.y]
+        if self.draggingState is not None:
+            self.draggingState.x = event.x
+            self.draggingState.y = event.y
+        self.redraw()
 
     def draw_side_menu(self):
         self.canvas.create_oval(10, 10, 80, 80)
         self.canvas.create_text(45, 45, text="New State")
+        self.canvas.create_rectangle(10, 100, 120, 140)
+        self.canvas.create_text(65, 120, text="New Transition")
+        self.canvas.create_rectangle(10, 160, 120, 580, fill="red")
+        self.canvas.create_text(65, 340, text="TRASH")
 
     def finish(self):
         pass
@@ -115,6 +166,7 @@ class Runner(Frame):
     def reset(self):
         self.playButton.config(text="PLAY")
         self.current_state = self.machine.start_state()
+        self.update_current_state(self.current_state.name)
         self.going = False
         self.correct = None
 
@@ -159,9 +211,9 @@ class Runner(Frame):
         direction = state_info[0]
         self.current_state = state_info[1]
         self.update_current_state(self.current_state.name)
-        if direction == "0":
+        if direction == LEFT:
             self.left()
-        elif direction == "1":
+        elif direction == RIGHT:
             self.right()
         return True
 

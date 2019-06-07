@@ -1,5 +1,5 @@
-LEFT = False
-RIGHT = True
+LEFT = "<"
+RIGHT = ">"
 
 class Machine:
     def __init__(self):
@@ -98,6 +98,12 @@ class State:
                     tape.move_right()
                 return [i.get_direction(), i.get_end()]
         return False
+
+class LocationState(State):
+    def __init__(self, name, x, y):
+        super(LocationState, self).__init__(name)
+        self.x = x
+        self.y = y
 
 class Transition:
     def __init__(self, read, write, direction, end):
