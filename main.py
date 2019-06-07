@@ -2,6 +2,47 @@ from tkinter import *
 from machine import *
 import math
 
+class TransitionCreator(Toplevel):
+    def __init__(self, runner, start_state, end_state):
+        super(TransitionCreator, self).__init__(runner.master)
+
+        self.runner = runner
+
+        self.start_state = start_state
+        self.end_state = end_state
+
+        self.canvas = Canvas(self, width=250, height=100)
+        self.canvas.grid(row=0, column=0)
+
+        Label(self, anchor=W, text="From: ").grid(row=0, column=0)
+        Label(self, text=start_state.name).grid(row=0, column=1)
+
+        Label(self, anchor=W, text="Read: ").grid(row=1, column=0)
+        self.read_text = Text(self, height=1, width=5)
+        self.read_text.grid(row=1, column=1)
+
+        Label(self, anchor=W, text="Write: ").grid(row=2, column=0)
+        self.write_text = Text(self, height=1, width=5)
+        self.write_text.grid(row=2,column=1)
+
+        Label(self, anchor=W, text="Direction: ").grid(row=3, column=0)
+        self.direction_text = Text(self, height=1, width=5)
+        self.direction_text.grid(row=3, column=1)
+
+        Label(self, anchor=W, text="To: ").grid(row=4, column=0)
+        Label(self, text=end_state.name).grid(row=4,column=1)
+
+        Button(self, text="MAKE TRANSITION", command=self.make_transition).grid(row=5, column=0)
+        Button(self, text="CANCEL", command=self.destroy).grid(row=5,column=1)
+
+    def make_transition(self):
+        read = self.read_text.get("1.0", END).split("\n")
+        write = self.write_text.get("1.0", END).split("\n")
+        direction = self.direction_text.get("1.0", END).split("\n")
+        self.start_state.addTransition(Transition(read, write, direction, self.end_state))
+        print(self.start_state.transitions)
+        self.destroy()
+
 
 class Builder(Toplevel):
     def __init__(self, runner):
@@ -28,6 +69,9 @@ class Builder(Toplevel):
 
         self.draw_side_menu()
 
+    def open_transition_window(self, start, end):
+        self.transition_creator = TransitionCreator(self, start, end)
+
     def in_circle(self, x, y, cx, cy, r):
         return math.sqrt((cx-x)**2+(cy-y)**2) <= r
 
@@ -48,7 +92,7 @@ class Builder(Toplevel):
                         self.transitioning = circle
                         self.canvas.create_line(circle.x, circle.y, event.x, event.y)
                     elif self.transitioning is not None:
-                        self.transitioning.addTransition(Transition("", "", ">", circle))
+                        self.open_transition_window(self.transitioning, circle)
                         self.transitioning = None
                     else:
                         self.draggingState = self.states[s]
@@ -76,7 +120,7 @@ class Builder(Toplevel):
         self.draw_side_menu()
 
         for s in self.states + ([self.draggingState] if self.draggingState is not None else []):
-            color = "yellow" if self.transitioning is not None else "black"
+            color = "blue" if self.transitioning is not None else "black"
             self.canvas.create_oval(s.x - 35, s.y - 35, s.x + 35, s.y + 35, outline=color)
             self.canvas.create_text(s.x, s.y, text=s.name, fill=color)
             for t in s.transitions:
