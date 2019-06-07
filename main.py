@@ -48,10 +48,11 @@ class Builder(Toplevel):
                         self.transitioning = circle
                         self.canvas.create_line(circle.x, circle.y, event.x, event.y)
                     elif self.transitioning is not None:
-                        self.machine.addTransition(self.transitioning.name, "", "", "1", circle.name)
+                        self.transitioning.addTransition(Transition("", "", ">", circle))
                         self.transitioning = None
-                    self.draggingState = self.states[s]
-                    del self.states[s]
+                    else:
+                        self.draggingState = self.states[s]
+                        del self.states[s]
                     return
             if self.transitioning is not None:
                 self.transitioning = None
@@ -59,10 +60,15 @@ class Builder(Toplevel):
     def mouse_released(self, event):
         self.mouse = False
         if self.draggingState is not None:
-            if not self.in_rect(event.x, event.y, 10, 160, 120, 580):
+            if self.in_rect(event.x, event.y, 10, 160, 120, 580):
+                 for s in self.states:
+                    for t in s.transitions:
+                        if t.end == self.draggingState:
+                            s.transitions.remove(t)
+            else:
                 self.states.append(self.draggingState)
-        self.draggingState = None
 
+        self.draggingState = None
         self.redraw()
 
     def redraw(self):
@@ -70,12 +76,15 @@ class Builder(Toplevel):
         self.draw_side_menu()
 
         for s in self.states + ([self.draggingState] if self.draggingState is not None else []):
-            self.canvas.create_oval(s.x - 35, s.y - 35, s.x + 35, s.y + 35)
-            self.canvas.create_text(s.x, s.y, text=s.name)
+            color = "yellow" if self.transitioning is not None else "black"
+            self.canvas.create_oval(s.x - 35, s.y - 35, s.x + 35, s.y + 35, outline=color)
+            self.canvas.create_text(s.x, s.y, text=s.name, fill=color)
+            for t in s.transitions:
+                self.canvas.create_line(s.x, s.y, t.end.x, t.end.y)
 
         if self.transitioning not in [True, None]:
             self.canvas.create_line(self.transitioning.x, self.transitioning.y, self.mousepos[0], self.mousepos[1])
-        self.canvas.update()
+        # self.canvas.update()
 
     def mouse_moved(self, event):
         self.mousepos = [event.x, event.y]

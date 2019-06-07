@@ -92,10 +92,6 @@ class State:
         for i in self.transitions:
             if i.get_read() == tape.get_current_input():
                 tape.change_input(i.get_write(), i.get_read())
-                if i.get_direction() == LEFT:
-                    tape.move_left()
-                elif i.get_direction() == RIGHT:
-                    tape.move_right()
                 return [i.get_direction(), i.get_end()]
         return False
 
