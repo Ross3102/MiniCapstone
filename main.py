@@ -2,6 +2,34 @@ from tkinter import *
 from machine import *
 import math
 
+class NameState(Toplevel):
+    def __init__(self, builder, dragging_state, states_list):
+        super(NameState, self).__init__(builder.master)
+
+        self.builder = builder
+        self.dragging_state = dragging_state
+        self.states_list = states_list
+
+        self.canvas = Canvas(self, width=250, height=100)
+        self.canvas.grid(row=0, column=0)
+
+        Label(self, anchor=W, text="State Name: ").grid(row=0, column=0)
+        self.name_text = Text(self, height=1, width=5)
+        self.name_text.grid(row=0, column=1)
+
+        Button(self, text="CONFIRM", command=self.get_name).grid(row=1, column=0)
+        Button(self, text="CANCEL", command=self.delete).grid(row=1, column=1)
+
+    def get_name(self):
+        name = self.name_text.get("1.0", END).strip()
+        self.dragging_state.name = name
+        self.states_list.append(self.dragging_state)
+        self.destroy()
+
+    def delete(self):
+        self.destroy()
+
+
 class TransitionCreator(Toplevel):
     def __init__(self, builder, start_state, end_state):
         super(TransitionCreator, self).__init__(builder.master)
@@ -82,7 +110,7 @@ class Builder(Toplevel):
     def mouse_clicked(self, event):
         self.mouse = True
         if self.in_circle(event.x, event.y, 45, 45, 35):
-            self.draggingState = LocationState("q0", event.x, event.y)
+            self.draggingState = LocationState("", event.x, event.y)
         elif self.in_rect(event.x, event.y, 10, 100, 120, 140):
             self.transitioning = True
         else:
@@ -111,7 +139,10 @@ class Builder(Toplevel):
                         if t.end == self.draggingState:
                             s.transitions.remove(t)
             else:
-                self.states.append(self.draggingState)
+                if self.draggingState.name == "":
+                    name_menu = NameState(self, self.draggingState, self.states)
+                else:
+                    self.states.append(self.draggingState)
 
         self.draggingState = None
         self.redraw()
