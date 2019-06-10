@@ -97,7 +97,8 @@ class Builder(Toplevel):
         self.bind('<ButtonPress-1>', self.mouse_clicked)
         self.bind('<ButtonRelease-1>', self.mouse_released)
         self.bind("<Motion>", self.mouse_moved)
-        self.bind("<Double-Button-1>", self.modify_state)
+        self.bind("<Double-Button-1>", self.modify_state_start)
+        self.bind("<ButtonPress-3>", self.modify_state_end)
 
         self.draw_side_menu()
 
@@ -174,14 +175,20 @@ class Builder(Toplevel):
         self.draggingState = None
         self.redraw()
 
-    def modify_state(self, event):
+    def modify_state_start(self, event):
         for s in self.states:
             if self.in_circle(event.x, event.y, s.x, s.y, 35):
-                if s.name == self.start_state:
+                if self.start_state == s.name:
                     self.start_state = None
-                elif s.name in self.end_states:
-                    self.end_states.remove(s.name)
+                else:
                     self.start_state = s.name
+        self.redraw()
+
+    def modify_state_end(self, event):
+        for s in self.states:
+            if self.in_circle(event.x, event.y, s.x, s.y, 35):
+                if s.name in self.end_states:
+                    self.end_states.remove(s.name)
                 else:
                     self.end_states.append(s.name)
         self.redraw()
@@ -195,18 +202,18 @@ class Builder(Toplevel):
                 color = "blue"
             elif s.name == self.start_state:
                 color = "green"
-            elif s.name in self.end_states:
-                color = "red"
             else:
                 color = "black"
             self.canvas.create_oval(s.x - 35, s.y - 35, s.x + 35, s.y + 35, outline=color)
+            if s.name in self.end_states:
+                self.canvas.create_oval(s.x - 30, s.y - 30, s.x + 30, s.y + 30, outline=color)
             self.canvas.create_text(s.x, s.y, text=s.name, fill=color)
             end_list = []
             for t in s.transitions:
-                if t.end.y == s.y:
+                if abs(t.end.y) == abs(s.y):
                     x = (s.x + t.end.x) / 2
                     y = s.y + 15 * (end_list.count(t.end.name) + 1)
-                elif t.end.x == s.x:
+                elif abs(t.end.x) == abs(s.x):
                     x = s.x + 15 * (end_list.count(t.end.name) + 1)
                     y = (s.y + t.end.y) / 2
                 else:
@@ -215,6 +222,13 @@ class Builder(Toplevel):
                     x = (y - (t.end.y + s.y)/2) / slope + (t.end.x+s.x)/2
                 end_list.append(t.end.name)
                 self.canvas.create_line(s.x, s.y, t.end.x, t.end.y)
+                arrow_slope = (s.y - t.end.y)/(s.x - t.end.x)
+                if t.end.x - s.x < 0:
+                    arrow_y = 35 * arrow_slope / math.sqrt(arrow_slope**2 + 1) + t.end.y
+                else:
+                    arrow_y = -35 * arrow_slope / math.sqrt(arrow_slope**2 + 1) + t.end.y
+                arrow_x = (arrow_y - t.end.y) / arrow_slope + t.end.x
+                self.canvas.create_line(s.x, s.y, arrow_x, arrow_y, arrow=LAST)
                 angle = math.atan2(s.y - t.end.y, t.end.x - s.x)*180/math.pi
                 if math.fabs(angle) > 90:
                     angle = angle + 180
