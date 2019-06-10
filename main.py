@@ -156,12 +156,17 @@ class Builder(Toplevel):
             color = "blue" if self.transitioning is not None else "black"
             self.canvas.create_oval(s.x - 35, s.y - 35, s.x + 35, s.y + 35, outline=color)
             self.canvas.create_text(s.x, s.y, text=s.name, fill=color)
+            end_list = []
             for t in s.transitions:
+                slope = -1 * (t.end.x - s.x)/(t.end.y - s.y)
+                y = 15 * (end_list.count(t.end.name) + 1) * slope / math.sqrt(slope**2 + 1) + (t.end.y + s.y)/2
+                x = (y - (t.end.y + s.y)/2) / slope + (t.end.x+s.x)/2
+                end_list.append(t.end.name)
                 self.canvas.create_line(s.x, s.y, t.end.x, t.end.y)
                 angle = math.atan2(s.y - t.end.y, t.end.x - s.x)*180/math.pi
                 if math.fabs(angle) > 90:
                     angle = angle + 180
-                self.canvas.create_text((s.x + t.end.x) / 2, (s.y + t.end.y)/2 - 10,
+                self.canvas.create_text(x, y,
                                         angle=angle, text=str(t))
         if self.transitioning not in [True, None]:
             self.canvas.create_line(self.transitioning.x, self.transitioning.y, self.mousepos[0], self.mousepos[1])
