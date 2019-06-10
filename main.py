@@ -3,10 +3,10 @@ from machine import *
 import math
 
 class TransitionCreator(Toplevel):
-    def __init__(self, runner, start_state, end_state):
-        super(TransitionCreator, self).__init__(runner.master)
+    def __init__(self, builder, start_state, end_state):
+        super(TransitionCreator, self).__init__(builder.master)
 
-        self.runner = runner
+        self.builder = builder
 
         self.start_state = start_state
         self.end_state = end_state
@@ -41,7 +41,7 @@ class TransitionCreator(Toplevel):
         direction = self.direction_text.get("1.0", END).strip()
         print(read)
         self.start_state.addTransition(Transition(read, write, direction, self.end_state))
-        print(self.start_state.transitions)
+        self.builder.redraw()
         self.destroy()
 
 
