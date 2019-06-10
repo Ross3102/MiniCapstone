@@ -121,4 +121,4 @@ class Transition:
         return self.direction
 
     def __str__(self):
-        return "%s/%s %s %s" % (self.read, self.write, self.direction, self.end)
+        return "%s/%s,%s" % (self.read, self.write, self.direction)

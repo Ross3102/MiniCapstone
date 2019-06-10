@@ -36,9 +36,10 @@ class TransitionCreator(Toplevel):
         Button(self, text="CANCEL", command=self.destroy).grid(row=5,column=1)
 
     def make_transition(self):
-        read = self.read_text.get("1.0", END).split("\n")
-        write = self.write_text.get("1.0", END).split("\n")
-        direction = self.direction_text.get("1.0", END).split("\n")
+        read = self.read_text.get("1.0", END).strip()
+        write = self.write_text.get("1.0", END).strip()
+        direction = self.direction_text.get("1.0", END).strip()
+        print(read)
         self.start_state.addTransition(Transition(read, write, direction, self.end_state))
         print(self.start_state.transitions)
         self.destroy()
@@ -125,7 +126,11 @@ class Builder(Toplevel):
             self.canvas.create_text(s.x, s.y, text=s.name, fill=color)
             for t in s.transitions:
                 self.canvas.create_line(s.x, s.y, t.end.x, t.end.y)
-
+                angle = math.atan2(s.y - t.end.y, t.end.x - s.x)*180/math.pi
+                if math.fabs(angle) > 90:
+                    angle = angle + 180
+                self.canvas.create_text((s.x + t.end.x) / 2, (s.y + t.end.y)/2 - 10,
+                                        angle=angle, text=str(t))
         if self.transitioning not in [True, None]:
             self.canvas.create_line(self.transitioning.x, self.transitioning.y, self.mousepos[0], self.mousepos[1])
         # self.canvas.update()
