@@ -75,7 +75,7 @@ class TransitionCreator(Toplevel):
 
 
 class Builder(Toplevel):
-    def __init__(self, runner):
+    def __init__(self, runner, old_machine=None):
         super(Builder, self).__init__(runner.master)
 
         self.runner = runner
@@ -84,7 +84,6 @@ class Builder(Toplevel):
         self.canvas.grid(row=0, column=0)
         Button(self, text="FINISH BUILDING", command=self.finish).grid(row=1, column=0)
 
-        self.machine = Machine()
         self.states = []
         self.start_state = None
         self.end_states = []
@@ -101,6 +100,30 @@ class Builder(Toplevel):
         self.bind("<Double-Button-1>", self.modify_state)
 
         self.draw_side_menu()
+
+        if old_machine is not None:
+            i = 0
+            for s in old_machine.states.values():
+                x = i % 5
+                y = i // 5
+
+                newState = LocationState(s.name, 185+850/5*x, 65+570/5*y)
+                self.states.append(newState)
+                i += 1
+
+            for oldstate in old_machine.states.values():
+                s1 = None
+                for s in self.states:
+                    if oldstate.name == s.name:
+                        s1 = s
+                for t in oldstate.transitions:
+                    for s2 in self.states:
+                        if s2.name == t.end.name:
+                            s1.addTransition(Transition(t.read, t.write, t.direction, s2))
+
+        self.redraw()
+
+
 
     def open_transition_window(self, start, end):
         self.transition_creator = TransitionCreator(self, start, end)
@@ -180,9 +203,12 @@ class Builder(Toplevel):
             self.canvas.create_text(s.x, s.y, text=s.name, fill=color)
             end_list = []
             for t in s.transitions:
-                if t.end.y - s.y == 0:
-                    x = (t.end.x + s.x) / 2
-                    y = (t.end.y + s.y) / 2 + 15 * (end_list.count(t.end.name) + 1)
+                if t.end.y == s.y:
+                    x = (s.x + t.end.x) / 2
+                    y = s.y + 15 * (end_list.count(t.end.name) + 1)
+                elif t.end.x == s.x:
+                    x = s.x + 15 * (end_list.count(t.end.name) + 1)
+                    y = (s.y + t.end.y) / 2
                 else:
                     slope = -1 * (t.end.x - s.x)/(t.end.y - s.y)
                     y = 15 * (end_list.count(t.end.name) + 1) * slope / math.sqrt(slope**2 + 1) + (t.end.y + s.y)/2
@@ -192,11 +218,9 @@ class Builder(Toplevel):
                 angle = math.atan2(s.y - t.end.y, t.end.x - s.x)*180/math.pi
                 if math.fabs(angle) > 90:
                     angle = angle + 180
-                self.canvas.create_text(x, y,
-                                        angle=angle, text=str(t))
+                self.canvas.create_text(x, y, text=str(t))
         if self.transitioning not in [True, None]:
             self.canvas.create_line(self.transitioning.x, self.transitioning.y, self.mousepos[0], self.mousepos[1])
-        # self.canvas.update()
 
     def mouse_moved(self, event):
         self.mousepos = [event.x, event.y]
@@ -214,7 +238,14 @@ class Builder(Toplevel):
         self.canvas.create_text(65, 340, text="TRASH")
 
     def finish(self):
-        pass
+        machine = Machine()
+        machine.set_start_end(self.start_state, self.end_states)
+        for s in self.states:
+            for t in s.transitions:
+                machine.addTransition(s.name, t.read, t.write, t.direction, t.end.name)
+
+        self.runner.machine = machine
+        # self.destroy()
 
 
 class Runner(Frame):
@@ -282,7 +313,7 @@ class Runner(Frame):
         self.loop()
 
     def launch_builder(self):
-        self.builder = Builder(self)
+        self.builder = Builder(self, self.machine)
 
     def reset(self):
         self.playButton.config(text="PLAY")
