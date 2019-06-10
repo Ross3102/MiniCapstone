@@ -1,5 +1,6 @@
 LEFT = "<"
 RIGHT = ">"
+NULL_CHAR = "~"
 
 class Machine:
     def __init__(self):
@@ -43,29 +44,29 @@ class Machine:
 
 class Tape:
     def __init__(self):
-        self.right_stack = [None]
-        self.left_stack = [None]
+        self.right_stack = [NULL_CHAR]
+        self.left_stack = [NULL_CHAR]
 
     def get_current_input(self):
         return self.right_stack[-1]
 
     def set_input(self, input):
         self.right_stack = [i for i in input[::-1]]
-        self.left_stack = [None]
+        self.left_stack = [NULL_CHAR]
 
     def move_right(self):
         self.left_stack.append(self.right_stack.pop())
         if len(self.right_stack) == 0:
-            self.right_stack.append(None)
+            self.right_stack.append(NULL_CHAR)
 
     def move_left(self):
         self.right_stack.append(self.left_stack.pop())
         if len(self.left_stack) == 0:
-            self.left_stack.append(None)
+            self.left_stack.append(NULL_CHAR)
 
     def display_tape(self, num_elem):
 
-        myList = [None for i in range(num_elem * 2 - 1)]
+        myList = [NULL_CHAR for i in range(num_elem * 2 - 1)]
 
         for i in range(min(num_elem - 1, len(self.left_stack))):
             myList[num_elem-2-i] = self.left_stack[len(self.left_stack)-1-i]
@@ -119,6 +120,9 @@ class Transition:
 
     def get_direction(self):
         return self.direction
+
+    def text_str(self):
+        return " %s %s %s %s" % (self.read, self.write, self.direction, self.end.name)
 
     def __str__(self):
         return "%s/%s,%s" % (self.read, self.write, self.direction)

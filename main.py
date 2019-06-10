@@ -2,6 +2,8 @@ from tkinter import *
 from machine import *
 import math
 
+NULL_CHAR = "~"
+
 class NameState(Toplevel):
     def __init__(self, builder, dragging_state, states_list):
         super(NameState, self).__init__(builder.master)
@@ -260,7 +262,7 @@ class Builder(Toplevel):
                 angle = math.atan2(s.y - t.end.y, t.end.x - s.x)*180/math.pi
                 if math.fabs(angle) > 90:
                     angle = angle + 180
-                self.canvas.create_text(x, y, text=str(t))
+                self.canvas.create_text(x, y, angle=angle, text=str(t))
         if self.transitioning not in [True, None]:
             self.canvas.create_line(self.transitioning.x, self.transitioning.y, self.mousepos[0], self.mousepos[1])
 
@@ -287,7 +289,17 @@ class Builder(Toplevel):
                 machine.addTransition(s.name, t.read, t.write, t.direction, t.end.name)
 
         self.runner.machine = machine
-        # self.destroy()
+        self.runner.start_state_box.insert("1.0", machine.start_state_name)
+        transition_text = ""
+        for s in machine.states.values():
+            for i in s.transitions:
+                transition_text = transition_text + s.name + i.text_str() + "\n"
+        self.runner.transitionBox.insert("1.0", transition_text)
+        final_state_text = ""
+        for s in machine.final_state_names:
+            final_state_text = final_state_text + s + " "
+        self.runner.end_state_box.insert("1.0", final_state_text)
+        self.destroy()
 
 
 class Runner(Frame):
