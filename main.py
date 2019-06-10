@@ -14,7 +14,7 @@ class NameState(Toplevel):
         self.canvas.grid(row=0, column=0)
 
         Label(self, anchor=W, text="State Name: ").grid(row=0, column=0)
-        self.name_text = Text(self, height=1, width=5)
+        self.name_text = Text(self, height=1, width=8)
         self.name_text.grid(row=0, column=1)
 
         Button(self, text="CONFIRM", command=self.get_name).grid(row=1, column=0)
@@ -24,6 +24,7 @@ class NameState(Toplevel):
         name = self.name_text.get("1.0", END).strip()
         self.dragging_state.name = name
         self.states_list.append(self.dragging_state)
+        self.builder.redraw()
         self.destroy()
 
     def delete(self):
