@@ -86,6 +86,8 @@ class Builder(Toplevel):
 
         self.machine = Machine()
         self.states = []
+        self.start_state = None
+        self.end_states = []
 
         self.mouse = False
         self.mousepos = [0, 0]
@@ -96,6 +98,7 @@ class Builder(Toplevel):
         self.bind('<ButtonPress-1>', self.mouse_clicked)
         self.bind('<ButtonRelease-1>', self.mouse_released)
         self.bind("<Motion>", self.mouse_moved)
+        self.bind("<Double-Button-1>", self.modify_state)
 
         self.draw_side_menu()
 
@@ -148,19 +151,42 @@ class Builder(Toplevel):
         self.draggingState = None
         self.redraw()
 
+    def modify_state(self, event):
+        for s in self.states:
+            if self.in_circle(event.x, event.y, s.x, s.y, 35):
+                if s.name == self.start_state:
+                    self.start_state = None
+                elif s.name in self.end_states:
+                    self.end_states.remove(s.name)
+                    self.start_state = s.name
+                else:
+                    self.end_states.append(s.name)
+        self.redraw()
+
     def redraw(self):
         self.canvas.delete("all")
         self.draw_side_menu()
 
         for s in self.states + ([self.draggingState] if self.draggingState is not None else []):
-            color = "blue" if self.transitioning is not None else "black"
+            if self.transitioning is not None:
+                color = "blue"
+            elif s.name == self.start_state:
+                color = "green"
+            elif s.name in self.end_states:
+                color = "red"
+            else:
+                color = "black"
             self.canvas.create_oval(s.x - 35, s.y - 35, s.x + 35, s.y + 35, outline=color)
             self.canvas.create_text(s.x, s.y, text=s.name, fill=color)
             end_list = []
             for t in s.transitions:
-                slope = -1 * (t.end.x - s.x)/(t.end.y - s.y)
-                y = 15 * (end_list.count(t.end.name) + 1) * slope / math.sqrt(slope**2 + 1) + (t.end.y + s.y)/2
-                x = (y - (t.end.y + s.y)/2) / slope + (t.end.x+s.x)/2
+                if t.end.y - s.y == 0:
+                    x = (t.end.x + s.x) / 2
+                    y = (t.end.y + s.y) / 2 + 15 * (end_list.count(t.end.name) + 1)
+                else:
+                    slope = -1 * (t.end.x - s.x)/(t.end.y - s.y)
+                    y = 15 * (end_list.count(t.end.name) + 1) * slope / math.sqrt(slope**2 + 1) + (t.end.y + s.y)/2
+                    x = (y - (t.end.y + s.y)/2) / slope + (t.end.x+s.x)/2
                 end_list.append(t.end.name)
                 self.canvas.create_line(s.x, s.y, t.end.x, t.end.y)
                 angle = math.atan2(s.y - t.end.y, t.end.x - s.x)*180/math.pi
