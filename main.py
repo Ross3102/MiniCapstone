@@ -30,12 +30,11 @@ class NameState(Toplevel):
     def __init__(self, builder, dragging_state, states_list):
         super(NameState, self).__init__(builder.master)
 
+        self.title("New State")
+
         self.builder = builder
         self.dragging_state = dragging_state
         self.states_list = states_list
-
-        self.canvas = Canvas(self, width=250, height=100)
-        self.canvas.grid(row=0, column=0)
 
         Label(self, anchor=W, text="State Name: ").grid(row=0, column=0)
         self.name_text = Text(self, height=1, width=8)
@@ -59,13 +58,12 @@ class TransitionCreator(Toplevel):
     def __init__(self, builder, start_state, end_state):
         super(TransitionCreator, self).__init__(builder.master)
 
+        self.title("New Transition")
+
         self.builder = builder
 
         self.start_state = start_state
         self.end_state = end_state
-
-        self.canvas = Canvas(self, width=250, height=100)
-        self.canvas.grid(row=0, column=0)
 
         Label(self, anchor=W, text="From: ").grid(row=0, column=0)
         Label(self, text=start_state.name).grid(row=0, column=1)
