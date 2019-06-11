@@ -235,51 +235,82 @@ class Builder(Toplevel):
             end_list = []
             for t in s.transitions:
                 if t.end.y == s.y and t.end.x == s.x:
+                    modifier_x = 1
+                    modifier_y = 1
                     x = s.x
-                    y = s.y + 15 * (end_list.count(t.end.name) + 1)
+                    y = s.y + modifier_y * 15 * (end_list.count(t.end.name) + 1)
                     arrow_start_x = s.x
                     arrow_start_y = s.y
                     arrow_x = t.end.x
                     arrow_y = t.end.y
                 elif abs(t.end.y) == abs(s.y):
-                    x = (s.x + t.end.x) / 2
-                    y = s.y + 15 * (end_list.count(t.end.name) + 1)
                     if t.end.x > s.x:
+                        modifier_x = 0
+                        modifier_y = -1
                         arrow_start_x = s.x + 35
                         arrow_x = t.end.x - 35
                     else:
+                        modifier_x = 0
+                        modifier_y = 1
                         arrow_start_x = s.x - 35
                         arrow_x = t.end.x + 35
+
+                    x = (s.x + t.end.x) / 2
+                    y = s.y + modifier_y * 15 * (end_list.count(t.end.name) + 1)
                     arrow_start_y = s.y
                     arrow_y = t.end.y
 
                 elif abs(t.end.x) == abs(s.x):
-                    x = s.x + 15 * (end_list.count(t.end.name) + 1)
-                    y = (s.y + t.end.y) / 2
                     if t.end.y > s.y:
+                        modifier_x = 1
+                        modifier_y = 0
                         arrow_start_y = s.y + 35
                         arrow_y = t.end.y - 35
                     else:
+                        modifier_x = -1
+                        modifier_y = 0
                         arrow_start_y = s.y - 35
                         arrow_y = t.end.y + 35
+
+                    x = s.x + modifier_x * 15 * (end_list.count(t.end.name) + 1)
+                    y = (s.y + t.end.y) / 2
                     arrow_start_x = s.x
                     arrow_x = t.end.x
 
                 else:
                     slope = -1 * (t.end.x - s.x)/(t.end.y - s.y)
                     arrow_slope = (s.y - t.end.y) / (s.x - t.end.x)
-                    y = 15 * (end_list.count(t.end.name) + 1) * slope / math.sqrt(slope**2 + 1) + (t.end.y + s.y)/2
-                    x = (y - (t.end.y + s.y)/2) / slope + (t.end.x+s.x)/2
                     if t.end.x - s.x < 0:
-                        arrow_start_y = 35 * -arrow_slope / math.sqrt(arrow_slope ** 2 + 1) + s.y
+                        if t.end.y - s.y < 0:
+                            modifier_y = -1
+                            modifier_x = 1
+                        else:
+                            modifier_y = 1
+                            modifier_x = 1
+                        arrow_start_y = 35 * -arrow_slope / math.sq\rt(arrow_slope ** 2 + 1) + s.y
                         arrow_y = 35 * arrow_slope / math.sqrt(arrow_slope ** 2 + 1) + t.end.y
                     else:
+                        if t.end.y - s.y < 0:
+                            modifier_y = -1
+                            modifier_x = -1
+                        else:
+                            modifier_y = 1
+                            modifier_x = -1
                         arrow_start_y = 35 * arrow_slope / math.sqrt(arrow_slope ** 2 + 1) + s.y
                         arrow_y = -35 * arrow_slope / math.sqrt(arrow_slope ** 2 + 1) + t.end.y
+
+                    y = modifier_y * 15 * (end_list.count(t.end.name) + 1) * slope / math.sqrt(slope ** 2 + 1) + (t.end.y + s.y) / 2
+                    x = (y - (t.end.y + s.y) / 2) / slope + (t.end.x + s.x) / 2
                     arrow_start_x = (arrow_start_y - s.y) / arrow_slope + s.x
                     arrow_x = (arrow_y - t.end.y) / arrow_slope + t.end.x
 
                 end_list.append(t.end.name)
+
+                arrow_start_x += modifier_x * 3
+                arrow_x += modifier_x * 3
+                arrow_start_y += modifier_y * 3
+                arrow_y += modifier_y * 3
+
                 self.canvas.create_line(arrow_start_x, arrow_start_y, arrow_x, arrow_y, arrow=LAST)
                 angle = math.atan2(s.y - t.end.y, t.end.x - s.x)*180/math.pi
                 if math.fabs(angle) > 90:
