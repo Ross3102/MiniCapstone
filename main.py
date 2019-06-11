@@ -121,7 +121,7 @@ class Builder(Toplevel):
         self.bind('<ButtonRelease-1>', self.mouse_released)
         self.bind("<Motion>", self.mouse_moved)
         self.bind("<Double-Button-1>", self.modify_state_start)
-        self.bind("<ButtonPress-2>", self.modify_state_end)
+        self.bind("<ButtonPress-3>", self.modify_state_end)
 
         self.draw_side_menu()
 
@@ -287,7 +287,7 @@ class Builder(Toplevel):
                         else:
                             modifier_y = 1
                             modifier_x = 1
-                        arrow_start_y = 35 * -arrow_slope / math.sq\rt(arrow_slope ** 2 + 1) + s.y
+                        arrow_start_y = 35 * -arrow_slope / math.sqrt(arrow_slope ** 2 + 1) + s.y
                         arrow_y = 35 * arrow_slope / math.sqrt(arrow_slope ** 2 + 1) + t.end.y
                     else:
                         if t.end.y - s.y < 0:
@@ -311,11 +311,15 @@ class Builder(Toplevel):
                 arrow_start_y += modifier_y * 3
                 arrow_y += modifier_y * 3
 
-                self.canvas.create_line(arrow_start_x, arrow_start_y, arrow_x, arrow_y, arrow=LAST)
-                angle = math.atan2(s.y - t.end.y, t.end.x - s.x)*180/math.pi
-                if math.fabs(angle) > 90:
-                    angle = angle + 180
-                self.canvas.create_text(x, y, text=str(t))
+                if t.end == s:
+                    self.canvas.create_arc(s.x, s.y-35, s.x - 70, s.y + 35, extent=242, style=ARC, start=60)
+                    self.canvas.create_text(x, s.y-(25 + 15*(end_list.count(s.name) + 1)), text=str(t))
+                else:
+                    self.canvas.create_line(arrow_start_x, arrow_start_y, arrow_x, arrow_y, arrow=LAST)
+                    angle = math.atan2(s.y - t.end.y, t.end.x - s.x)*180/math.pi
+                    if math.fabs(angle) > 90:
+                        angle = angle + 180
+                    self.canvas.create_text(x, y, angle=angle, text=str(t))
         if self.transitioning not in [True, None]:
             self.canvas.create_line(self.transitioning.x, self.transitioning.y, self.mousepos[0], self.mousepos[1])
 
@@ -335,6 +339,12 @@ class Builder(Toplevel):
         self.canvas.create_text(65, 340, text="TRASH")
 
     def finish(self):
+        if self.start_state is None:
+            e = ErrorWindow(self.runner.master, "The machine has no start state!")
+            return
+        elif len(self.end_states) == 0:
+            e = ErrorWindow(self.runner.master, "The machine has no halt states!")
+            return
         self.runner.start_state_box.delete('1.0', END)
         self.runner.start_state_box.insert("1.0", self.start_state)
         transition_text = ""
@@ -373,7 +383,7 @@ class Runner(Frame):
 
         self.current_state = None
         self.stepTimer = 0
-        self.stepDelay = 5
+        self.stepDelay = 13
 
         self.inputBox = Text(self, height=1, width=50)
         self.inputBox.grid(row=0, column=0)
@@ -432,10 +442,18 @@ class Runner(Frame):
         transitions = [t.split() for t in self.transitionBox.get("1.0", END).split("\n") if len(t) != 0]
 
         start_state = self.start_state_box.get("1.0", END).strip()
-        self.update_current_state(start_state)
         end_states = self.end_state_box.get("1.0", END).strip().split(" ")
 
+        if start_state is None:
+            e = ErrorWindow(self.master, "The machine has no start state!")
+            return
+        elif len(end_states) == 0:
+            e = ErrorWindow(self.master, "The machine has no halt states!")
+            return
+
+        self.update_current_state(start_state)
         self.machine.set_start_end(start_state, end_states)
+
         for i in range(len(transitions)):
             start, read, write, direction, end = transitions[i]
             self.machine.addTransition(start, read, write, direction, end)
