@@ -121,7 +121,7 @@ class Builder(Toplevel):
         self.bind('<ButtonRelease-1>', self.mouse_released)
         self.bind("<Motion>", self.mouse_moved)
         self.bind("<Double-Button-1>", self.modify_state_start)
-        self.bind("<ButtonPress-3>", self.modify_state_end)
+        self.bind("<ButtonPress-2>", self.modify_state_end)
 
         self.draw_side_menu()
 
@@ -282,8 +282,8 @@ class Builder(Toplevel):
                     arrow_slope = (s.y - t.end.y) / (s.x - t.end.x)
                     if t.end.x - s.x < 0:
                         if t.end.y - s.y < 0:
-                            modifier_y = -1
-                            modifier_x = 1
+                            modifier_y = 1
+                            modifier_x = -1
                         else:
                             modifier_y = 1
                             modifier_x = 1
@@ -294,12 +294,12 @@ class Builder(Toplevel):
                             modifier_y = -1
                             modifier_x = -1
                         else:
-                            modifier_y = 1
-                            modifier_x = -1
+                            modifier_y = -1
+                            modifier_x = 1
                         arrow_start_y = 35 * arrow_slope / math.sqrt(arrow_slope ** 2 + 1) + s.y
                         arrow_y = -35 * arrow_slope / math.sqrt(arrow_slope ** 2 + 1) + t.end.y
 
-                    y = modifier_y * 15 * (end_list.count(t.end.name) + 1) * slope / math.sqrt(slope ** 2 + 1) + (t.end.y + s.y) / 2
+                    y = modifier_y * 15 * (end_list.count(t.end.name) + 1) * abs(slope) / math.sqrt(slope ** 2 + 1) + (t.end.y + s.y) / 2
                     x = (y - (t.end.y + s.y) / 2) / slope + (t.end.x + s.x) / 2
                     arrow_start_x = (arrow_start_y - s.y) / arrow_slope + s.x
                     arrow_x = (arrow_y - t.end.y) / arrow_slope + t.end.x
@@ -319,7 +319,7 @@ class Builder(Toplevel):
                     angle = math.atan2(s.y - t.end.y, t.end.x - s.x)*180/math.pi
                     if math.fabs(angle) > 90:
                         angle = angle + 180
-                    self.canvas.create_text(x, y, angle=angle, text=str(t))
+                    self.canvas.create_text(x, y, text=str(t))
         if self.transitioning not in [True, None]:
             self.canvas.create_line(self.transitioning.x, self.transitioning.y, self.mousepos[0], self.mousepos[1])
 
