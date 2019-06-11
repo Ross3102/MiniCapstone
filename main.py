@@ -5,11 +5,22 @@ import math
 
 NULL_CHAR = "~"
 
+
 class ErrorWindow(Toplevel):
     def __init__(self, master, message):
         super(ErrorWindow, self).__init__(master)
 
         self.title("Error")
+
+        Label(self, text=message).pack()
+        Button(self, text="Dismiss", command=self.destroy).pack()
+
+
+class ResultWindow(Toplevel):
+    def __init__(self, master, message):
+        super(ResultWindow, self).__init__(master)
+
+        self.title("Result")
 
         Label(self, text=message).pack()
         Button(self, text="Dismiss", command=self.destroy).pack()
@@ -412,11 +423,11 @@ class Runner(Frame):
             if self.going:
                 if not self.step():
                     self.correct = False
-                    print("NO MATCH")
+                    w = ResultWindow(self.master, "Input did not match!")
                     self.playButton.config(text="RESET")
             if self.current_state is not None and self.current_state.name in self.machine.final_state_names:
                 self.correct = True
-                print("MATCH")
+                w = ResultWindow(self.master, "Input matched!")
                 self.playButton.config(text="RESET")
 
         self.master.after(1, self.loop)
