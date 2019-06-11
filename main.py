@@ -1,5 +1,6 @@
 from tkinter import *
 from machine import *
+from random import randint
 import math
 
 NULL_CHAR = "~"
@@ -105,18 +106,13 @@ class Builder(Toplevel):
         self.draw_side_menu()
 
         if old_machine is not None:
-            i = 0
             for s in old_machine.states.values():
-                x = i % 5
-                y = i // 5
-
-                newState = LocationState(s.name, 185+850/5*x, 65+570/5*y)
+                newState = LocationState(s.name, randint(185,950), randint(65,550))
                 self.states.append(newState)
                 if s.name == old_machine.start_state_name:
                     self.start_state = s.name
                 if s.name in old_machine.final_state_names:
                     self.end_states.append(s.name)
-                i += 1
 
             for oldstate in old_machine.states.values():
                 s1 = None
@@ -129,8 +125,6 @@ class Builder(Toplevel):
                             s1.addTransition(Transition(t.read, t.write, t.direction, s2))
 
         self.redraw()
-
-
 
     def open_transition_window(self, start, end):
         self.transition_creator = TransitionCreator(self, start, end)
@@ -440,7 +434,8 @@ class Runner(Frame):
     def display_tape(self, text, offset=0):
         self.erase_tape(offset)
         for i in range(-2, min(self.numBoxes, len(text))+2):
-            self.canvas.create_text(self.bufferSize + self.boxSize * (i+.5) + offset, 22+self.boxSize/2, text=text[i+2])
+            letter = "" if text[i+2] == "~" else text[i+2]
+            self.canvas.create_text(self.bufferSize + self.boxSize * (i+.5) + offset, 22+self.boxSize/2, text=letter)
         self.canvas.update()
 
     def load(self):
