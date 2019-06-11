@@ -100,7 +100,7 @@ class Builder(Toplevel):
         self.bind('<ButtonRelease-1>', self.mouse_released)
         self.bind("<Motion>", self.mouse_moved)
         self.bind("<Double-Button-1>", self.modify_state_start)
-        self.bind("<ButtonPress-3>", self.modify_state_end)
+        self.bind("<ButtonPress-2>", self.modify_state_end)
 
         self.draw_side_menu()
 
@@ -112,6 +112,10 @@ class Builder(Toplevel):
 
                 newState = LocationState(s.name, 185+850/5*x, 65+570/5*y)
                 self.states.append(newState)
+                if s.name == old_machine.start_state_name:
+                    self.start_state = s.name
+                if s.name in old_machine.final_state_names:
+                    self.end_states.append(s.name)
                 i += 1
 
             for oldstate in old_machine.states.values():
@@ -262,7 +266,7 @@ class Builder(Toplevel):
                 angle = math.atan2(s.y - t.end.y, t.end.x - s.x)*180/math.pi
                 if math.fabs(angle) > 90:
                     angle = angle + 180
-                self.canvas.create_text(x, y, angle=angle, text=str(t))
+                self.canvas.create_text(x, y, text=str(t))
         if self.transitioning not in [True, None]:
             self.canvas.create_line(self.transitioning.x, self.transitioning.y, self.mousepos[0], self.mousepos[1])
 
