@@ -5,6 +5,16 @@ import math
 
 NULL_CHAR = "~"
 
+class ErrorWindow(Toplevel):
+    def __init__(self, master, message):
+        super(ErrorWindow, self).__init__(master)
+
+        self.title("Error")
+
+        Label(self, text=message).pack()
+        Button(self, text="Dismiss", command=self.destroy).pack()
+
+
 class NameState(Toplevel):
     def __init__(self, builder, dragging_state, states_list):
         super(NameState, self).__init__(builder.master)
@@ -80,6 +90,8 @@ class TransitionCreator(Toplevel):
 class Builder(Toplevel):
     def __init__(self, runner, old_machine=None):
         super(Builder, self).__init__(runner.master)
+
+        self.title("Turing Machine Builder")
 
         self.runner = runner
 
@@ -284,23 +296,20 @@ class Builder(Toplevel):
         self.canvas.create_text(65, 340, text="TRASH")
 
     def finish(self):
-        machine = Machine()
-        machine.set_start_end(self.start_state, self.end_states)
-        for s in self.states:
-            for t in s.transitions:
-                machine.addTransition(s.name, t.read, t.write, t.direction, t.end.name)
-
-        self.runner.machine = machine
-        self.runner.start_state_box.insert("1.0", machine.start_state_name)
+        self.runner.start_state_box.delete('1.0', END)
+        self.runner.start_state_box.insert("1.0", self.start_state)
         transition_text = ""
-        for s in machine.states.values():
+        for s in self.states:
             for i in s.transitions:
                 transition_text = transition_text + s.name + i.text_str() + "\n"
+        self.runner.transitionBox.delete('1.0', END)
         self.runner.transitionBox.insert("1.0", transition_text)
         final_state_text = ""
-        for s in machine.final_state_names:
+        for s in self.end_states:
             final_state_text = final_state_text + s + " "
+        self.runner.end_state_box.delete('1.0', END)
         self.runner.end_state_box.insert("1.0", final_state_text)
+        self.runner.load_machine()
         self.destroy()
 
 
@@ -379,7 +388,7 @@ class Runner(Frame):
         self.correct = None
 
     def load_machine(self):
-        transitions = [t.split() for t in self.transitionBox.get("1.0", END).split("\n") if len(t) !=  0]
+        transitions = [t.split() for t in self.transitionBox.get("1.0", END).split("\n") if len(t) != 0]
 
         start_state = self.start_state_box.get("1.0", END).strip()
         self.update_current_state(start_state)
@@ -439,6 +448,9 @@ class Runner(Frame):
         self.canvas.update()
 
     def load(self):
+        if self.machine.start_state() is None:
+            e = ErrorWindow(self.master, "You must create a machine before loading input!")
+            return
         self.reset()
         self.inputTape.set_input(self.inputBox.get("1.0", END)[:-1])
         self.display_tape(self.inputTape.display_tape(self.numBoxes//2+3))
@@ -468,6 +480,9 @@ class Runner(Frame):
                 self.display_tape(text, offset)
 
     def play(self):
+        if self.current_state is None:
+            e = ErrorWindow(self.master, "You cannot run without loading a machine!")
+            return
         if self.correct is not None:
             self.load()
         else:
@@ -477,6 +492,9 @@ class Runner(Frame):
         self.going = False
 
     def step_button_pressed(self):
+        if self.current_state is None:
+            e = ErrorWindow(self.master, "You cannot run without loading a machine!")
+            return
         self.pause()
         if self.correct is None and not self.step():
             self.correct = False
