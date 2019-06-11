@@ -168,10 +168,14 @@ class Builder(Toplevel):
         self.mouse = False
         if self.draggingState is not None:
             if self.in_rect(event.x, event.y, 10, 160, 120, 580):
-                 for s in self.states:
+                for s in self.states:
                     for t in s.transitions:
                         if t.end == self.draggingState:
                             s.transitions.remove(t)
+                if self.draggingState.name in self.end_states:
+                    self.end_states.remove(self.draggingState.name)
+                if self.draggingState == self.start_state:
+                    self.start_state = None
             else:
                 if self.draggingState.name == "":
                     name_menu = NameState(self, self.draggingState, self.states)
