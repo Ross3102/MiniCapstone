@@ -90,7 +90,6 @@ class TransitionCreator(Toplevel):
         read = self.read_text.get("1.0", END).strip()
         write = self.write_text.get("1.0", END).strip()
         direction = self.direction_text.get("1.0", END).strip()
-        print(read)
         self.start_state.addTransition(Transition(read, write, direction, self.end_state))
         self.builder.redraw()
         self.destroy()
@@ -342,6 +341,8 @@ class Runner(Frame):
         self.machine = Machine()
 
         self.current_state = None
+        self.stepTimer = 0
+        self.stepDelay = 5
 
         self.inputBox = Text(self, height=1, width=50)
         self.inputBox.grid(row=0, column=0)
@@ -417,7 +418,22 @@ class Runner(Frame):
         self.current_state_text.grid(row=1, column=0)
 
     def loop(self):
-        if self.correct is None:
+        if self.stepTimer != 0:
+            if self.stepTimer < 0:
+                self.stepTimer -= 1
+            else:
+                self.stepTimer += 1
+            if self.stepTimer % self.stepDelay == 0:
+                self.display_tape(self.inputTape.display_tape(self.numBoxes // 2 + 3), self.stepTimer // self.stepDelay)
+            if abs(self.stepTimer) >= self.stepDelay * self.boxSize:
+                if self.stepTimer < 0:
+                    self.inputTape.move_right()
+                    self.display_tape(self.inputTape.display_tape(self.numBoxes // 2 + 3))
+                else:
+                    self.inputTape.move_left()
+                    self.display_tape(self.inputTape.display_tape(self.numBoxes // 2 + 3))
+                self.stepTimer = 0
+        elif self.correct is None:
             if self.going:
                 if not self.step():
                     self.correct = False
@@ -467,26 +483,16 @@ class Runner(Frame):
     def left(self):
         self.display_tape(self.inputTape.display_tape(self.numBoxes // 2 + 3))
         self.move_tape(LEFT)
-        self.inputTape.move_left()
-        self.display_tape(self.inputTape.display_tape(self.numBoxes//2+3))
 
     def right(self):
         self.display_tape(self.inputTape.display_tape(self.numBoxes // 2 + 3))
         self.move_tape(RIGHT)
-        self.inputTape.move_right()
-        self.display_tape(self.inputTape.display_tape(self.numBoxes // 2 + 3))
 
     def move_tape(self, direction):
-        text = self.inputTape.display_tape(self.numBoxes // 2 + 3)
-        offset = 0
         if direction == LEFT:
-            while offset < self.boxSize:
-                offset += 1
-                self.display_tape(text, offset)
+            self.stepTimer = 1
         else:
-            while offset > -self.boxSize:
-                offset -= 1
-                self.display_tape(text, offset)
+            self.stepTimer = -1
 
     def play(self):
         if self.current_state is None:
@@ -505,10 +511,10 @@ class Runner(Frame):
             e = ErrorWindow(self.master, "You cannot run without loading a machine!")
             return
         self.pause()
-        if self.correct is None and not self.step():
+        if self.stepTimer == 0 and self.correct is None and not self.step():
             self.correct = False
-            print("NO MATCH")
-            return
+            w = ResultWindow(self.master, "Input did not match!")
+            self.playButton.config(text="RESET")
 
 root = Tk()
 root.title("Turing Machine Runner")
