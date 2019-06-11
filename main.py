@@ -314,6 +314,11 @@ class Builder(Toplevel):
                 if t.end == s:
                     self.canvas.create_arc(s.x, s.y-35, s.x - 70, s.y + 35, extent=242, style=ARC, start=60)
                     self.canvas.create_text(x, s.y-(25 + 15*(end_list.count(s.name) + 1)), text=str(t))
+                    top_point_x = s.x-35+35*math.cos(math.radians(60))
+                    top_point_y = s.y - 35*math.sin(math.radians(60))
+                    tangent_slope = top_point_y/top_point_x
+                    self.canvas.create_line(top_point_x-1, top_point_y-tangent_slope, top_point_x, top_point_y, arrow=LAST)
+
                 else:
                     self.canvas.create_line(arrow_start_x, arrow_start_y, arrow_x, arrow_y, arrow=LAST)
                     angle = math.atan2(s.y - t.end.y, t.end.x - s.x)*180/math.pi
