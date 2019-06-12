@@ -41,7 +41,6 @@ class Machine:
         start_state.addTransition(Transition(read, write, direction, end_state))
 
 
-
 class Tape:
     def __init__(self):
         self.right_stack = [NULL_CHAR]
@@ -51,7 +50,7 @@ class Tape:
         return self.right_stack[-1]
 
     def set_input(self, input):
-        self.right_stack = [("~" if i == " " else i) for i in input[::-1]]
+        self.right_stack = [NULL_CHAR] + [(NULL_CHAR if i == " " else i) for i in input[::-1]]
         self.left_stack = [NULL_CHAR]
 
     def move_right(self):

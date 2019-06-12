@@ -121,8 +121,8 @@ class Builder(Toplevel):
         self.bind('<ButtonRelease-1>', self.mouse_released)
         self.bind("<Motion>", self.mouse_moved)
         self.bind("<Double-Button-1>", self.modify_state_start)
-        # self.bind("<ButtonPress-3>", self.modify_state_end)
-        self.bind("<ButtonPress-2>", self.modify_state_end)
+        self.bind("<ButtonPress-3>", self.modify_state_end)
+        # self.bind("<ButtonPress-2>", self.modify_state_end)
 
         self.draw_side_menu()
 
@@ -325,8 +325,8 @@ class Builder(Toplevel):
                     angle = math.atan2(s.y - t.end.y, t.end.x - s.x)*180/math.pi
                     if math.fabs(angle) > 90:
                         angle = angle + 180
-                    # self.canvas.create_text(x, y, angle=angle, text=str(t))
-                    self.canvas.create_text(x, y, text=str(t))
+                    self.canvas.create_text(x, y, angle=angle, text=str(t))
+                    # self.canvas.create_text(x, y, text=str(t))
 
         if self.transitioning not in [True, None]:
             self.canvas.create_line(self.transitioning.x, self.transitioning.y, self.mousepos[0], self.mousepos[1])
@@ -336,14 +336,19 @@ class Builder(Toplevel):
         if self.draggingState is not None:
             self.draggingState.x = event.x
             self.draggingState.y = event.y
+            # if self.in_rect(event.x, event.y, 10, 160, 120, 580):
+            #
         self.redraw()
 
     def draw_side_menu(self):
-        self.canvas.create_oval(10, 10, 80, 80)
+        new_state = 10, 10, 80, 80
+        new_transition = 10, 100, 120, 140
+        trash = 10, 160, 120, 580
+        self.canvas.create_oval(new_state)
         self.canvas.create_text(45, 45, text="New State")
-        self.canvas.create_rectangle(10, 100, 120, 140)
+        self.canvas.create_rectangle(new_transition)
         self.canvas.create_text(65, 120, text="New Transition")
-        self.canvas.create_rectangle(10, 160, 120, 580, fill="red")
+        self.canvas.create_rectangle(trash, fill="red")
         self.canvas.create_text(65, 340, text="TRASH")
 
     def finish(self):
@@ -492,14 +497,14 @@ class Runner(Frame):
                 self.stepTimer = 0
         elif self.correct is None:
             if self.going:
-                if not self.step():
+                if self.current_state is not None and self.current_state.name in self.machine.final_state_names:
+                    self.correct = True
+                    w = ResultWindow(self.master, "Input matched!")
+                    self.playButton.config(text="RESET")
+                elif not self.step():
                     self.correct = False
                     w = ResultWindow(self.master, "Input did not match!")
                     self.playButton.config(text="RESET")
-            if self.current_state is not None and self.current_state.name in self.machine.final_state_names:
-                self.correct = True
-                w = ResultWindow(self.master, "Input matched!")
-                self.playButton.config(text="RESET")
 
         self.master.after(1, self.loop)
 
@@ -525,7 +530,7 @@ class Runner(Frame):
     def display_tape(self, text, offset=0):
         self.erase_tape(offset)
         for i in range(-2, min(self.numBoxes, len(text))+2):
-            letter = "" if text[i+2] == "~" else text[i+2]
+            letter = "" if text[i+2] == NULL_CHAR else text[i+2]
             self.canvas.create_text(self.bufferSize + self.boxSize * (i+.5) + offset, 22+self.boxSize/2, text=letter)
         self.canvas.update()
 
@@ -568,10 +573,16 @@ class Runner(Frame):
             e = ErrorWindow(self.master, "You cannot run without loading a machine!")
             return
         self.pause()
-        if self.stepTimer == 0 and self.correct is None and not self.step():
-            self.correct = False
-            w = ResultWindow(self.master, "Input did not match!")
-            self.playButton.config(text="RESET")
+        if self.stepTimer == 0 and self.correct is None:
+            if self.current_state is not None and self.current_state.name in self.machine.final_state_names:
+                self.correct = True
+                w = ResultWindow(self.master, "Input matched!")
+                self.playButton.config(text="RESET")
+            elif not self.step():
+                self.correct = False
+                w = ResultWindow(self.master, "Input did not match!")
+                self.playButton.config(text="RESET")
+
 
 root = Tk()
 root.title("Turing Machine Runner")
