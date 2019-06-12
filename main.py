@@ -465,22 +465,22 @@ class Runner(Frame):
         start_state = self.start_state_box.get("1.0", END).strip()
         end_states = self.end_state_box.get("1.0", END).strip().split(" ")
 
-        if start_state is None:
+        if start_state == "":
             e = ErrorWindow(self.master, "The machine has no start state!")
             return
-        elif len(end_states) == 0:
+        elif len(end_states) == 1 and end_states[0] == "":
             e = ErrorWindow(self.master, "The machine has no halt states!")
             return
+        else:
+            self.update_current_state(start_state)
+            self.machine.set_start_end(start_state, end_states)
 
-        self.update_current_state(start_state)
-        self.machine.set_start_end(start_state, end_states)
+            for i in range(len(transitions)):
+                start, read, write, direction, end = transitions[i]
+                self.machine.addTransition(start, read, write, direction, end)
 
-        for i in range(len(transitions)):
-            start, read, write, direction, end = transitions[i]
-            self.machine.addTransition(start, read, write, direction, end)
-
-        self.load()
-        self.reset()
+            self.load()
+            self.reset()
 
     def update_current_state(self, text):
         self.current_state_text.destroy()
