@@ -121,8 +121,8 @@ class Builder(Toplevel):
         self.bind('<ButtonRelease-1>', self.mouse_released)
         self.bind("<Motion>", self.mouse_moved)
         self.bind("<Double-Button-1>", self.modify_state_start)
-        self.bind("<ButtonPress-3>", self.modify_state_end)
-        # self.bind("<ButtonPress-2>", self.modify_state_end)
+        # self.bind("<ButtonPress-3>", self.modify_state_end)
+        self.bind("<ButtonPress-2>", self.modify_state_end)
 
         self.draw_side_menu()
 
@@ -325,8 +325,8 @@ class Builder(Toplevel):
                     angle = math.atan2(s.y - t.end.y, t.end.x - s.x)*180/math.pi
                     if math.fabs(angle) > 90:
                         angle = angle + 180
-                    self.canvas.create_text(x, y, angle=angle, text=str(t))
-                    # self.canvas.create_text(x, y, text=str(t))
+                    # self.canvas.create_text(x, y, angle=angle, text=str(t))
+                    self.canvas.create_text(x, y, text=str(t))
 
         if self.transitioning not in [True, None]:
             self.canvas.create_line(self.transitioning.x, self.transitioning.y, self.mousepos[0], self.mousepos[1])
@@ -381,7 +381,7 @@ class Runner(Frame):
 
         self.master = master
 
-        self.numBoxes = 9
+        self.numBoxes = 11
         self.canvasWidth = 400
         self.canvasHeight = 100
 
@@ -410,11 +410,11 @@ class Runner(Frame):
 
         Button(self, text="STEP", command=self.step_button_pressed).grid(row=0, column=4)
 
-        self.current_state_text = Label(self, text="Current State", height=2)
+        self.current_state_text = Label(self, text="Current State: ", height=2)
         self.current_state_text.grid(row=1, column=0)
 
         self.canvas = Canvas(self, width=400, height=100)
-        self.canvas.grid(row=2, column=0, columnspan=4)
+        self.canvas.grid(row=2, column=0, columnspan=5)
 
         Label(self, text="Start State").grid(row=3, column=0)
 
