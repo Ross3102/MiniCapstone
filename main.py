@@ -40,11 +40,14 @@ class NameState(Toplevel):
         self.name_text = Text(self, height=1, width=8)
         self.name_text.grid(row=0, column=1)
 
-        Button(self, text="CONFIRM", command=self.get_name).grid(row=1, column=0)
-        Button(self, text="CANCEL", command=self.delete).grid(row=1, column=1)
+        Button(self, text="CONFIRM", command=self.get_name).grid(row=1, column=1)
+        Button(self, text="CANCEL", command=self.delete).grid(row=1, column=0)
 
     def get_name(self):
         name = self.name_text.get("1.0", END).strip()
+        if name == "":
+            e = ErrorWindow(self.master, "You cannot make an empty state!")
+            return
         self.dragging_state.name = name
         self.states_list.append(self.dragging_state)
         self.builder.redraw()
@@ -83,8 +86,8 @@ class TransitionCreator(Toplevel):
         Label(self, anchor=W, text="To: ").grid(row=4, column=0)
         Label(self, text=end_state.name).grid(row=4,column=1)
 
-        Button(self, text="MAKE TRANSITION", command=self.make_transition).grid(row=5, column=0)
-        Button(self, text="CANCEL", command=self.destroy).grid(row=5,column=1)
+        Button(self, text="MAKE TRANSITION", command=self.make_transition).grid(row=5, column=1)
+        Button(self, text="CANCEL", command=self.destroy).grid(row=5,column=0)
 
     def make_transition(self):
         read = self.read_text.get("1.0", END).strip()
@@ -117,12 +120,14 @@ class Builder(Toplevel):
 
         self.transitioning = None
 
+        self.trash_color = "red"
+
         self.bind('<ButtonPress-1>', self.mouse_clicked)
         self.bind('<ButtonRelease-1>', self.mouse_released)
         self.bind("<Motion>", self.mouse_moved)
         self.bind("<Double-Button-1>", self.modify_state_start)
-        # self.bind("<ButtonPress-3>", self.modify_state_end)
-        self.bind("<ButtonPress-2>", self.modify_state_end)
+        self.bind("<ButtonPress-3>", self.modify_state_end)
+        # self.bind("<ButtonPress-2>", self.modify_state_end)
 
         self.draw_side_menu()
 
@@ -183,6 +188,7 @@ class Builder(Toplevel):
         self.mouse = False
         if self.draggingState is not None:
             if self.in_rect(event.x, event.y, 10, 160, 120, 580):
+                self.trash_color = "red"
                 for s in self.states:
                     for t in s.transitions:
                         if t.end == self.draggingState:
@@ -325,8 +331,8 @@ class Builder(Toplevel):
                     angle = math.atan2(s.y - t.end.y, t.end.x - s.x)*180/math.pi
                     if math.fabs(angle) > 90:
                         angle = angle + 180
-                    # self.canvas.create_text(x, y, angle=angle, text=str(t))
-                    self.canvas.create_text(x, y, text=str(t))
+                    self.canvas.create_text(x, y, angle=angle, text=str(t))
+                    # self.canvas.create_text(x, y, text=str(t))
 
         if self.transitioning not in [True, None]:
             self.canvas.create_line(self.transitioning.x, self.transitioning.y, self.mousepos[0], self.mousepos[1])
@@ -336,8 +342,10 @@ class Builder(Toplevel):
         if self.draggingState is not None:
             self.draggingState.x = event.x
             self.draggingState.y = event.y
-            # if self.in_rect(event.x, event.y, 10, 160, 120, 580):
-            #
+            if self.in_rect(event.x, event.y, 10, 160, 120, 580):
+                self.trash_color = "#ff7272"
+            else:
+                self.trash_color = "red"
         self.redraw()
 
     def draw_side_menu(self):
@@ -348,7 +356,7 @@ class Builder(Toplevel):
         self.canvas.create_text(45, 45, text="New State")
         self.canvas.create_rectangle(new_transition)
         self.canvas.create_text(65, 120, text="New Transition")
-        self.canvas.create_rectangle(trash, fill="red")
+        self.trash = self.canvas.create_rectangle(trash, fill=self.trash_color, tags='trash')
         self.canvas.create_text(65, 340, text="TRASH")
 
     def finish(self):
