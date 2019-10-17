@@ -1,4 +1,5 @@
 # Turing Machine Visualizer
+Turing Machine Visualizer is a python program intended for the visual representation and simulation of Turing Machines, allowing for an interactive interface for building machines.
 ## Controlling the machine builder
 To create a state, drag a circle from the corner of the screen. A prompt will appear asking to name the state.
 To designate a start state, double click on a state. The start state will be indicated with a green border. To designate an end state, right click on the state (specific to Windows).
