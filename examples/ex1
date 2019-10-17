@@ -1,0 +1,12 @@
+// Accepts strings that starts with an even number of "a"s followed by a single "b" or null character
+
+s0
+
+s0 a a > s0
+s0 b b < even
+s0 ~ ~ < even
+even a a < odd
+odd a a < even
+even ~ ~ > done
+
+done

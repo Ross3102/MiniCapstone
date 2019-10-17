@@ -1,0 +1,33 @@
+// Accepts all strings that are identical binary numbers of any length separated by a "#" (ex. 101#101)
+
+start
+
+back a a < back
+back b b < back
+back ~ ~ < s1
+rb ~ ~ > rb
+rb a a > rb
+rb b b > rb
+rb # b > hash
+start a a > start
+start b b > start
+start ~ # < s1
+s1 a ~ > ra
+s1 ~ ~ < s1
+s1 b ~ > rb
+s1 # ~ > almost
+hash ~ # < back
+p2 ~ # > start
+almost ~ ~ > almost
+almost a a > almost
+almost b b > almost
+almost # ~ < done
+ra ~ ~ > ra
+ra a a > ra
+ra b b > ra
+ra # a > hash
+p1 a a < p2
+p1 b b < p2
+p1 ~ ~ < p2
+
+done

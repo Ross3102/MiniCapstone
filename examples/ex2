@@ -1,0 +1,12 @@
+// Moves all "a"s and "b"s left one character
+
+read
+
+b ~ b > back
+back ~ ~ > read
+a ~ a > back
+read a ~ < a
+read b ~ < b
+read ~ ~ < done
+
+done
