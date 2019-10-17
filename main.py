@@ -596,3 +596,59 @@ root = Tk()
 root.title("Turing Machine Runner")
 app = Runner(root)
 root.mainloop()
+
+"""
+equal binary strings separated by hashtags
+
+s0
+
+s0 0 ~ > 0
+s0 # # > done
+s0 1 ~ > 1
+0 0 0 > 0
+0 1 1 > 0
+0 # # > read#
+read# # # > read#
+read# 0 # < back
+back # # < back
+back 0 0 < back
+back 1 1 < back
+back ~ ~ > s0
+read#1 # # > read#1
+read#1 1 # < back
+1 0 0 > 1
+1 1 1 > 1
+1 # # > read#1
+
+done
+"""
+
+"""
+even number of a's followed by a b
+
+s0
+
+s0 a a > s0
+s0 b b < even
+s0 ~ ~ < even
+even a a < odd
+odd a a < even
+even ~ ~ > done
+
+done
+"""
+
+"""
+shift everything over to the left
+
+read
+
+b ~ b > back
+back ~ ~ > read
+a ~ a > back
+read a ~ < a
+read b ~ < b
+read ~ ~ < done
+
+done
+"""
