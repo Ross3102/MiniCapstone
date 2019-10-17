@@ -6,6 +6,9 @@ In the create transition mode, click on a state and then another to create a tra
 
 ## Building a machine from text
 Transitions are formatted as follows: start_state read write direction end_state
+
 Valid direction characters are > meaning left, and < meaning right
+
 ~ signifies a null character or blank
+
 Multiple end states are separated by spaces (ex. endstate1 endstate2 endstate3 ... etc)
