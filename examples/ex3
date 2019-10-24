@@ -1,6 +1,6 @@
-// Accepts all strings that are identical binary numbers of any length separated by a "#" (ex. 101#101)
+// Reverses a string of "a"s and "b"s
 
-start
+p1
 
 back a a < back
 back b b < back
